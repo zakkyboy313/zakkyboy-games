@@ -4,4 +4,6 @@ Install ZakkyBoy handheld games in your browser: https://zakkyboy313.github.io/z
 
 Open it in Chrome or Edge on a computer, plug in your ZakkyBoy and click Install.
 
+A printable guide is in `ZakkyBoy install guide.pdf`.
+
 The `.bin` files in `firmware/` can also be flashed at address 0x0 with any ESP32 web flasher.

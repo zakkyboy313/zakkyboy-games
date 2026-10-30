@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;display:flex;flex-direction:column;align-items:center;padding:12px 8px;font-family:monospace;gap:8px}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;border:2px solid #444;display:block}
+#btns{display:flex;gap:12px}
+.btn{padding:8px 20px;background:#222;color:#eee;border:1.5px solid #555;font-family:monospace;font-size:13px;cursor:pointer;border-radius:4px;user-select:none;touch-action:none}
+.btn.held{background:#555}
+#moderow{display:flex;gap:0;width:512px}
+.mtab{flex:1;background:#1a1a1a;color:#666;border:1px solid #333;padding:6px 0;font-family:monospace;font-size:11px;text-align:center;cursor:pointer}
+.mtab:first-child{border-radius:4px 0 0 4px}
+.mtab:last-child{border-radius:0 4px 4px 0}
+.mtab.on{background:#333;color:#eee;border-color:#555}
+#togglerow{display:flex;gap:8px;width:512px}
+.tog{flex:1;background:#1a1a1a;color:#666;border:1px solid #333;padding:7px 0;font-family:monospace;font-size:11px;text-align:center;cursor:pointer;border-radius:4px}
+.tog.on{background:#333;color:#eee;border-color:#aaa}
+#sliders{width:512px;background:#1a1a1a;border:1px solid #333;border-radius:0 0 6px 6px;padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}
+.row{display:flex;flex-direction:column;gap:2px}
+.lbl{color:#888;font-size:10px;display:flex;justify-content:space-between}
+.lbl span{color:#eee;font-size:10px}
+.sec{grid-column:1/-1;color:#555;font-size:9px;border-top:1px solid #2a2a2a;padding-top:4px;margin-top:2px}
+input[type=range]{width:100%;accent-color:#aaa;cursor:pointer}
+</style>
+</head>
+<body>
+<canvas id="c" width="128" height="64"></canvas>
+<div id="btns">
+  <button class="btn" id="bL">&#9664; [S] LEFT</button>
+  <button class="btn" id="bR">[A] RIGHT &#9654;</button>
+</div>
+<div id="moderow">
+  <div class="mtab on" id="tab0">CHASE</div>
+  <div class="mtab" id="tab1">COLLECT</div>
+  <div class="mtab" id="tab2">TRACK</div>
+</div>
+<div id="togglerow">
+  <div class="tog on" id="tPK">PLAYER KICKOUT: ON</div>
+  <div class="tog on" id="tEK">ENEMY KICKOUT: ON</div>
+  <div class="tog on" id="tINV">INVERT CONTROLS: ON</div>
+</div>
+<div id="sliders">
+  <div class="sec">PLAYER</div>
+  <div class="row"><div class="lbl">Player max speed<span id="vPS"></span></div><input type="range" id="sPS" min="0.1" max="1.5" step="0.01" value="0.95"></div>
+  <div class="row"><div class="lbl">Player accel<span id="vPA"></span></div><input type="range" id="sPA" min="0.0001" max="0.005" step="0.0001" value="0.005"></div>
+  <div class="row"><div class="lbl">Player turn<span id="vPT"></span></div><input type="range" id="sPT" min="0.001" max="0.012" step="0.0005" value="0.003"></div>
+  <div class="row"><div class="lbl">Grip<span id="vGR"></span></div><input type="range" id="sGR" min="0.01" max="0.25" step="0.005" value="0.18"></div>
+  <div class="sec">ENEMY</div>
+  <div class="row"><div class="lbl">Enemy max speed<span id="vES"></span></div><input type="range" id="sES" min="0.1" max="1.5" step="0.01" value="1.04"></div>
+  <div class="row"><div class="lbl">Enemy accel<span id="vEA"></span></div><input type="range" id="sEA" min="0.0001" max="0.005" step="0.0001" value="0.005"></div>
+  <div class="row"><div class="lbl">Enemy turn<span id="vET"></span></div><input type="range" id="sET" min="0.001" max="0.012" step="0.0005" value="0.0015"></div>
+  <div class="row"><div class="lbl">Enemy spawn<span id="vSP"></span></div><input type="range" id="sSP" min="500" max="6000" step="100" value="2800"></div>
+  <div class="sec">SHARED</div>
+  <div class="row"><div class="lbl">Kickout strength<span id="vKI"></span></div><input type="range" id="sKI" min="0" max="0.8" step="0.02" value="0.12"></div>
+  <div class="row"><div class="lbl">Car size<span id="vCS"></span></div><input type="range" id="sCS" min="3" max="14" step="0.5" value="3"></div>
+  <div class="row"><div class="lbl">Off-screen death dist<span id="vOD"></span></div><input type="range" id="sOD" min="4" max="80" step="1" value="50"></div>
+  <div class="sec">TRACK</div>
+  <div class="row"><div class="lbl">Track width<span id="vTW"></span></div><input type="range" id="sTW" min="8" max="40" step="1" value="20"></div>
+  <div class="row"><div class="lbl">Bend intensity<span id="vTB"></span></div><input type="range" id="sTB" min="0.005" max="0.15" step="0.005" value="0.035"></div>
+  <div class="sec">OBSTACLES (chase / slalom only)</div>
+  <div class="row"><div class="lbl">Ob spawn interval<span id="vOS"></span></div><input type="range" id="sOS" min="2000" max="30000" step="500" value="5000"></div>
+  <div class="row"><div class="lbl">Ob lifetime<span id="vOL"></span></div><input type="range" id="sOL" min="3000" max="30000" step="500" value="10000"></div>
+  <div class="row"><div class="lbl">Ob blink warning<span id="vOB"></span></div><input type="range" id="sOB" min="500" max="5000" step="250" value="1500"></div>
+  <div class="row"><div class="lbl">Ob min size<span id="vOM"></span></div><input type="range" id="sOM" min="3" max="15" step="1" value="4"></div>
+  <div class="row"><div class="lbl">Ob max size<span id="vOX"></span></div><input type="range" id="sOX" min="4" max="20" step="1" value="11"></div>
+</div>
+
+<script>
+var c=document.getElementById('c');
+c.style.width='512px'; c.style.height='256px';
+var ctx=c.getContext('2d');
+var W=128,H=64;
+
+// --- State ---
+var gameMode=0, pKick=true, eKick=true, invertControls=true;
+var mode='menu'; // menu = splash/mode select, title = per-mode title, play, dead, hiscore
+var menuSel=0; // 0=chase, 1=slalom, 2=track
+var score=0, hi=[0,0,0], survMs=0;
+var pl={x:64,y:32,angle:-Math.PI/2,vx:0,vy:0,spd:0};
+var enemies=[], obstacles=[], exps=[], skidL=[], skidR=[];
+var flash=0, spawnT=0, obstT=0, pendSpawn=null, lastT=null, dT=16;
+var kL=false, kR=false;
+var gate=null, gateScore=0, nextSide=1;
+var trackPts=[], trackDir=0, trackCurve=0, trackHead={x:0,y:0}, trackIdx=0;
+var skidL=[], skidR=[];
+var camX=0, camY=0;
+
+// --- Sliders ---
+var SID={PS:'sPS',PA:'sPA',PT:'sPT',GR:'sGR',ES:'sES',EA:'sEA',ET:'sET',SP:'sSP',KI:'sKI',CS:'sCS',OD:'sOD',TW:'sTW',TB:'sTB',OS:'sOS',OL:'sOL',OB:'sOB',OM:'sOM',OX:'sOX'};
+var VID={PS:'vPS',PA:'vPA',PT:'vPT',GR:'vGR',ES:'vES',EA:'vEA',ET:'vET',SP:'vSP',KI:'vKI',CS:'vCS',OD:'vOD',TW:'vTW',TB:'vTB',OS:'vOS',OL:'vOL',OB:'vOB',OM:'vOM',OX:'vOX'};
+var V={};
+function readV(){
+  for(var k in SID){
+    V[k]=parseFloat(document.getElementById(SID[k]).value);
+    var el=document.getElementById(VID[k]); if(!el) continue;
+    if(k==='SP'||k==='OS'||k==='OL'||k==='OB') el.textContent=V[k]+'ms';
+    else if(k==='OD'||k==='TW'||k==='CS'||k==='OM'||k==='OX') el.textContent=V[k]+'px';
+    else if(k==='GR'||k==='KI'||k==='TB') el.textContent=V[k].toFixed(3);
+    else if(k==='PA'||k==='EA'||k==='PT'||k==='ET') el.textContent=V[k].toFixed(4);
+    else el.textContent=V[k].toFixed(2);
+  }
+}
+for(var k in SID){(function(key){document.getElementById(SID[key]).addEventListener('input',readV);})(k);}
+readV();
+
+// --- Tabs ---
+function setTabs(){
+  for(var i=0;i<3;i++){
+    var el=document.getElementById('tab'+i);
+    if(i===gameMode){el.className='mtab on';}else{el.className='mtab';}
+  }
+}
+document.getElementById('tab0').addEventListener('click',function(){gameMode=0;setTabs();if(mode!=='play')mode='title';});
+document.getElementById('tab1').addEventListener('click',function(){gameMode=1;setTabs();if(mode!=='play')mode='title';});
+document.getElementById('tab2').addEventListener('click',function(){gameMode=2;setTabs();if(mode!=='play')mode='title';});
+
+// --- Toggles ---
+function mkTog(id,get,set,label){
+  document.getElementById(id).addEventListener('click',function(){
+    set(!get());
+    var el=document.getElementById(id);
+    el.textContent=label+': '+(get()?'ON':'OFF');
+    el.className='tog'+(get()?' on':'');
+  });
+}
+mkTog('tPK',function(){return pKick;},function(v){pKick=v;},'PLAYER KICKOUT');
+mkTog('tEK',function(){return eKick;},function(v){eKick=v;},'ENEMY KICKOUT');
+mkTog('tINV',function(){return invertControls;},function(v){invertControls=v;},'INVERT CONTROLS');
+
+// --- Font ---
+var FONT={
+  '0':[[1,1,1],[1,0,1],[1,0,1],[1,0,1],[1,1,1]],'1':[[0,1,0],[1,1,0],[0,1,0],[0,1,0],[1,1,1]],
+  '2':[[1,1,1],[0,0,1],[1,1,1],[1,0,0],[1,1,1]],'3':[[1,1,1],[0,0,1],[0,1,1],[0,0,1],[1,1,1]],
+  '4':[[1,0,1],[1,0,1],[1,1,1],[0,0,1],[0,0,1]],'5':[[1,1,1],[1,0,0],[1,1,1],[0,0,1],[1,1,1]],
+  '6':[[1,1,1],[1,0,0],[1,1,1],[1,0,1],[1,1,1]],'7':[[1,1,1],[0,0,1],[0,1,0],[0,1,0],[0,1,0]],
+  '8':[[1,1,1],[1,0,1],[1,1,1],[1,0,1],[1,1,1]],'9':[[1,1,1],[1,0,1],[1,1,1],[0,0,1],[1,1,1]],
+  'A':[[0,1,0],[1,0,1],[1,1,1],[1,0,1],[1,0,1]],'B':[[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,1,0]],
+  'C':[[1,1,1],[1,0,0],[1,0,0],[1,0,0],[1,1,1]],'D':[[1,1,0],[1,0,1],[1,0,1],[1,0,1],[1,1,0]],
+  'E':[[1,1,1],[1,0,0],[1,1,0],[1,0,0],[1,1,1]],'F':[[1,1,1],[1,0,0],[1,1,0],[1,0,0],[1,0,0]],
+  'G':[[1,1,1],[1,0,0],[1,0,1],[1,0,1],[1,1,1]],'H':[[1,0,1],[1,0,1],[1,1,1],[1,0,1],[1,0,1]],
+  'I':[[1,1,1],[0,1,0],[0,1,0],[0,1,0],[1,1,1]],'J':[[0,0,1],[0,0,1],[0,0,1],[1,0,1],[1,1,1]],
+  'K':[[1,0,1],[1,0,1],[1,1,0],[1,0,1],[1,0,1]],'L':[[1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,1,1]],
+  'M':[[1,0,1],[1,1,1],[1,1,1],[1,0,1],[1,0,1]],'N':[[1,0,1],[1,1,0],[1,0,1],[1,0,1],[1,0,1]],
+  'O':[[1,1,1],[1,0,1],[1,0,1],[1,0,1],[1,1,1]],'P':[[1,1,0],[1,0,1],[1,1,0],[1,0,0],[1,0,0]],
+  'Q':[[1,1,1],[1,0,1],[1,0,1],[1,1,0],[0,0,1]],'R':[[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,0,1]],
+  'S':[[1,1,1],[1,0,0],[1,1,1],[0,0,1],[1,1,1]],'T':[[1,1,1],[0,1,0],[0,1,0],[0,1,0],[0,1,0]],
+  'U':[[1,0,1],[1,0,1],[1,0,1],[1,0,1],[1,1,1]],'V':[[1,0,1],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
+  'W':[[1,0,0,0,1],[1,0,0,0,1],[1,0,1,0,1],[1,1,0,1,1],[0,1,0,1,0]],'X':[[1,0,1],[1,0,1],[0,1,0],[1,0,1],[1,0,1]],
+  'Y':[[1,0,1],[1,0,1],[0,1,0],[0,1,0],[0,1,0]],'Z':[[1,1,1],[0,0,1],[0,1,0],[1,0,0],[1,1,1]],
+  ' ':[[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]],
+  ':':[[0,0],[0,1],[0,0],[0,1],[0,0]],
+  '!':[[1],[1],[1],[0],[1]],
+  '-':[[0,0,0],[0,0,0],[1,1,1],[0,0,0],[0,0,0]]
+};
+function tw(s){var w=0;for(var i=0;i<s.length;i++){var r=FONT[s[i].toUpperCase()];w+=(r?r[0].length:3)+1;}return Math.max(0,w-1);}
+function dtxt(s,x,y,col){
+  ctx.fillStyle=col||'white'; var cx=x;
+  for(var i=0;i<s.length;i++){
+    var rows=FONT[s[i].toUpperCase()]; if(!rows){cx+=4;continue;}
+    for(var r=0;r<rows.length;r++) for(var cc=0;cc<rows[r].length;cc++) if(rows[r][cc]) ctx.fillRect(cx+cc,y+r,1,1);
+    cx+=rows[0].length+1;
+  }
+}
+
+// --- Helpers ---
+function rot(lx,ly,cos,sin){return[lx*cos-ly*sin,lx*sin+ly*cos];}
+function d2(a,b){return(a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y);}
+function dp(a,b){return Math.sqrt(d2(a,b));}
+function w2s(wx,wy){return[Math.round(wx-camX),Math.round(wy-camY)];}
+function onScr(wx,wy,m){var s=w2s(wx,wy);m=m||4;return s[0]>=-m&&s[0]<W+m&&s[1]>=-m&&s[1]<H+m;}
+function offD(px,py){var dx=px<0?-px:(px>=W?px-(W-1):0),dy=py<0?-py:(py>=H?py-(H-1):0);return Math.sqrt(dx*dx+dy*dy);}
+function isOff(c){return c.x<0||c.x>=W||c.y<0||c.y>=H;}
+function updCam(){var tx=pl.x-W/2,ty=pl.y-H/2,lag=Math.min(1,0.045*dT*0.06*16);camX+=(tx-camX)*lag;camY+=(ty-camY)*lag;}
+
+// --- Physics ---
+function kickF(c,sd,str){if(!sd)return;c.vx+=Math.sin(c.angle)*sd*str*c.spd*dT*0.003;c.vy-=Math.cos(c.angle)*sd*str*c.spd*dT*0.003;}
+function updCar(c,sd,isP,spdOverride){
+  var ms=spdOverride||(isP?V.PS:V.ES), acc=isP?V.PA:V.EA;
+  c.spd=Math.min(ms,c.spd+acc*dT);
+  var tx=Math.cos(c.angle)*c.spd, ty=Math.sin(c.angle)*c.spd;
+  var g=isP?(sd?V.GR*0.35:V.GR):V.GR*1.4;
+  var bl=Math.min(1,g*dT*0.06);
+  c.vx+=(tx-c.vx)*bl; c.vy+=(ty-c.vy)*bl;
+  if(isP&&pKick) kickF(c,sd,V.KI);
+  c.x+=c.vx*dT*0.06; c.y+=c.vy*dT*0.06;
+  c.spd=Math.sqrt(c.vx*c.vx+c.vy*c.vy);
+  // clamp velocity magnitude to max speed so kickout can't push past it
+  if(c.spd>ms){var scale=ms/c.spd;c.vx*=scale;c.vy*=scale;c.spd=ms;}
+}
+
+// --- Drawing ---
+function drawCar(x,y,angle,sz,solid,under){
+  var hw=sz/2, hh=sz*0.35, cos=Math.cos(angle), sin=Math.sin(angle);
+  var s=(gameMode===0)?[Math.round(x),Math.round(y)]:w2s(x,y);
+  var sx=s[0], sy=s[1];
+  ctx.fillStyle='white';
+  if(solid){
+    // enemy: solid fill — if under, skip every other pixel
+    for(var lx=-hw;lx<=hw;lx+=0.7) for(var ly=-hh;ly<=hh;ly+=0.7){
+      var r=rot(lx,ly,cos,sin);
+      var px=Math.round(sx+r[0]),py=Math.round(sy+r[1]);
+      if(under&&(px+py)%2===0) continue;
+      ctx.fillRect(px,py,1,1);
+    }
+  } else {
+    var corners=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]], wc=[];
+    for(var i=0;i<4;i++){var r=rot(corners[i][0],corners[i][1],cos,sin);wc.push([Math.round(sx+r[0]),Math.round(sy+r[1])]);}
+    for(var i=0;i<4;i++){
+      var x1=wc[i][0],y1=wc[i][1],x2=wc[(i+1)%4][0],y2=wc[(i+1)%4][1];
+      var dx=x2-x1,dy=y2-y1,st=Math.max(Math.abs(dx),Math.abs(dy));
+      if(!st){if(!under||(x1+y1)%2!==0)ctx.fillRect(x1,y1,1,1);continue;}
+      for(var j=0;j<=st;j++){
+        var px=Math.round(x1+dx*j/st),py=Math.round(y1+dy*j/st);
+        // dashed outline: skip every other pixel when under
+        if(under&&j%2===0) continue;
+        ctx.fillRect(px,py,1,1);
+      }
+    }
+    if(!under){
+      var wsz=Math.max(1,Math.round(hh*0.7)), wr=rot(hw-wsz-1,0,cos,sin);
+      ctx.fillRect(Math.round(sx+wr[0])-Math.floor(wsz/2),Math.round(sy+wr[1])-Math.floor(wsz/2),wsz,wsz);
+    }
+  }
+}
+
+function drawOb(ob,now){
+  if(ob.age<V.OB&&Math.floor(now/160)%2===0) return;
+  if(!onScr(ob.x,ob.y,ob.r+4)) return;
+  var s=w2s(ob.x,ob.y), sx=s[0], sy=s[1], r=ob.r;
+  ctx.fillStyle='white';
+  if(ob.shape===0){
+    for(var i=-r;i<=r;i++){ctx.fillRect(sx+i,sy-r,1,1);ctx.fillRect(sx+i,sy+r,1,1);ctx.fillRect(sx-r,sy+i,1,1);ctx.fillRect(sx+r,sy+i,1,1);}
+    for(var i=0;i<=r*2;i++){ctx.fillRect(Math.round(sx-r+i),Math.round(sy-r+i),1,1);ctx.fillRect(Math.round(sx+r-i),Math.round(sy-r+i),1,1);}
+  } else {
+    var cx=0,cy=r,dd=1-r;
+    var cp=function(px,py){ctx.fillRect(sx+px,sy+py,1,1);ctx.fillRect(sx-px,sy+py,1,1);ctx.fillRect(sx+px,sy-py,1,1);ctx.fillRect(sx-px,sy-py,1,1);ctx.fillRect(sx+py,sy+px,1,1);ctx.fillRect(sx-py,sy+px,1,1);ctx.fillRect(sx+py,sy-px,1,1);ctx.fillRect(sx-py,sy-px,1,1);};
+    while(cx<=cy){cp(cx,cy);if(dd<0)dd+=2*cx+3;else{dd+=2*(cx-cy)+5;cy--;}cx++;}
+    var dg=Math.round(r*0.707);
+    for(var i=-dg;i<=dg;i++){ctx.fillRect(sx+i,sy+i,1,1);ctx.fillRect(sx+i,sy-i,1,1);}
+  }
+}
+
+function drawWarn(x,y,now){
+  if(Math.floor(now/120)%2===0) return;
+  var s=(gameMode===0)?[Math.round(x),Math.round(y)]:w2s(x,y);
+  var wx=Math.max(3,Math.min(W-4,s[0])), wy=Math.max(3,Math.min(H-4,s[1]));
+  ctx.fillStyle='white';
+  ctx.fillRect(wx,wy-3,1,3);ctx.fillRect(wx,wy+1,1,1);ctx.fillRect(wx-3,wy+2,7,1);
+  ctx.fillRect(wx-2,wy+1,1,1);ctx.fillRect(wx+2,wy+1,1,1);ctx.fillRect(wx-1,wy-1,1,1);ctx.fillRect(wx+1,wy-1,1,1);ctx.fillRect(wx-2,wy,1,1);ctx.fillRect(wx+2,wy,1,1);
+}
+
+function drawOSI(wx,wy,label){
+  var scx=W/2,scy=H/2,s=w2s(wx,wy),dx=s[0]-scx,dy=s[1]-scy;
+  var ang=Math.atan2(dy,dx),cos=Math.cos(ang),sin=Math.sin(ang),mg=6,t=Infinity;
+  if(cos){var t1=(mg-scx)/cos,t2=(W-1-mg-scx)/cos;if(t1>0)t=Math.min(t,t1);if(t2>0)t=Math.min(t,t2);}
+  if(sin){var t1=(mg-scy)/sin,t2=(H-1-mg-scy)/sin;if(t1>0)t=Math.min(t,t1);if(t2>0)t=Math.min(t,t2);}
+  var ix=Math.round(scx+cos*t),iy=Math.round(scy+sin*t),sz=3;
+  var tip=[ix,iy],base=[ix-cos*sz*2,iy-sin*sz*2];
+  var pa=[base[0]-sin*sz,base[1]+cos*sz],pb=[base[0]+sin*sz,base[1]-cos*sz];
+  ctx.fillStyle='white';
+  var mnX=Math.min(tip[0],pa[0],pb[0]),mxX=Math.max(tip[0],pa[0],pb[0]),mnY=Math.min(tip[1],pa[1],pb[1]),mxY=Math.max(tip[1],pa[1],pb[1]);
+  var sgn=function(p1x,p1y,p2x,p2y,p3x,p3y){return(p1x-p3x)*(p2y-p3y)-(p2x-p3x)*(p1y-p3y);};
+  for(var y=mnY;y<=mxY;y++) for(var x=mnX;x<=mxX;x++){var d1=sgn(x,y,tip[0],tip[1],pa[0],pa[1]),d2=sgn(x,y,pa[0],pa[1],pb[0],pb[1]),d3=sgn(x,y,pb[0],pb[1],tip[0],tip[1]);if(!((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0)))ctx.fillRect(x,y,1,1);}
+  if(label!=null){var lbl=String(Math.round(label)),lw=tw(lbl);dtxt(lbl,Math.max(1,Math.min(W-lw-1,Math.round(ix-cos*8)-Math.floor(lw/2))),Math.max(1,Math.min(H-6,Math.round(iy-sin*8)-2)));}
+}
+
+function drawEdgeInd(px,py,od){
+  var t=Math.min(1,od/V.OD), sz=Math.round(4*(1-t));
+  var ex=Math.max(0,Math.min(W-1,Math.round(px))), ey=Math.max(0,Math.min(H-1,Math.round(py)));
+  var blink=t>0.65&&Math.floor(Date.now()/60)%2===0;
+  ctx.fillStyle=blink?'black':'white';
+  if(sz===0){ctx.fillStyle='white';ctx.fillRect(ex,ey,1,1);return;}
+  var offL=px<0,offR=px>=W,offT=py<0,ttx,tty,inX,inY;
+  if(offL){ttx=0;tty=ey;inX=1;inY=0;}else if(offR){ttx=W-1;tty=ey;inX=-1;inY=0;}else if(offT){ttx=ex;tty=0;inX=0;inY=1;}else{ttx=ex;tty=H-1;inX=0;inY=-1;}
+  var pX=-inY,pY=inX,bx=ttx+inX*sz,by=tty+inY*sz,ax=bx+pX*sz,ay=by+pY*sz,cxx=bx-pX*sz,cyy=by-pY*sz;
+  var mnX=Math.min(ttx,ax,cxx),mxX=Math.max(ttx,ax,cxx),mnY=Math.min(tty,ay,cyy),mxY=Math.max(tty,ay,cyy);
+  var sgn=function(p1x,p1y,p2x,p2y,p3x,p3y){return(p1x-p3x)*(p2y-p3y)-(p2x-p3x)*(p1y-p3y);};
+  for(var y=mnY;y<=mxY;y++) for(var x=mnX;x<=mxX;x++){var d1=sgn(x,y,ttx,tty,ax,ay),d2=sgn(x,y,ax,ay,cxx,cyy),d3=sgn(x,y,cxx,cyy,ttx,tty);if(!((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0)))ctx.fillRect(x,y,1,1);}
+}
+
+// --- Skids ---
+function addSkidPt(arr,wx,wy){if(arr.length>0){var l=arr[arr.length-1];if((wx-l.x)*(wx-l.x)+(wy-l.y)*(wy-l.y)<1)return;}arr.push({x:wx,y:wy,age:0});if(arr.length>300)arr.shift();}
+function addSkid(car,on,sz){
+  if(!on) return;
+  var hw=sz/2,hh=sz*0.35,cos=Math.cos(car.angle),sin=Math.sin(car.angle);
+  var ll=rot(-hw+0.5,-hh+0.5,cos,sin), rl=rot(-hw+0.5,hh-0.5,cos,sin);
+  addSkidPt(skidL,car.x+ll[0],car.y+ll[1]);
+  addSkidPt(skidR,car.x+rl[0],car.y+rl[1]);
+}
+function tickSkids(dt){
+  for(var i=0;i<skidL.length;i++) skidL[i].age+=dt;
+  for(var i=0;i<skidR.length;i++) skidR[i].age+=dt;
+  skidL=skidL.filter(function(s){return s.age<3000;});
+  skidR=skidR.filter(function(s){return s.age<3000;});
+}
+function drawSkids(col){
+  ctx.fillStyle=col||'white';
+  var arrs=[skidL,skidR];
+  for(var a=0;a<2;a++) for(var i=0;i<arrs[a].length;i++){
+    if(arrs[a][i].age>=2000) continue;
+    var s=w2s(arrs[a][i].x,arrs[a][i].y);
+    if(s[0]>=0&&s[0]<W&&s[1]>=0&&s[1]<H) ctx.fillRect(s[0],s[1],1,1);
+  }
+}
+
+// --- Explosions ---
+function mkExp(x,y){
+  var pts=[];
+  for(var i=0;i<10;i++){var a=Math.random()*Math.PI*2,sp=0.5+Math.random()*1.5;pts.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp});}
+  return{pts:pts,age:0,ttl:600};
+}
+
+// --- Track ---
+var SEG=3,LAHEAD=400,CBEHIND=80;
+var trkPhaseLen=0,trkPhaseT=0,trkTargetCurve=0,trkBendSign=1;
+function newTrkPhase(){
+  var bendy=Math.random()<0.7;
+  trkPhaseLen=bendy?(60+Math.random()*120):(20+Math.random()*40);
+  trkPhaseT=0;
+  if(bendy){
+    trkBendSign=-trkBendSign;
+    trkTargetCurve=trkBendSign*(0.030+Math.random()*(Math.max(V.TB,0.030)-0.030));
+  } else {
+    trkTargetCurve=0;
+  }
+}
+function initTrack(sx,sy){
+  trackPts=[];trackDir=0;trackCurve=0;trackHead={x:sx,y:sy};trackIdx=0;
+  trkPhaseLen=80;trkPhaseT=0;trkTargetCurve=0;trkBendSign=1;
+  for(var i=0;i<80;i++) extTrk(true);
+  newTrkPhase();
+  for(var i=0;i<Math.ceil(LAHEAD/SEG);i++) extTrk(false);
+}
+function extTrk(str){
+  if(!str){
+    trkPhaseT++;
+    if(trkPhaseT>=trkPhaseLen) newTrkPhase();
+    trackCurve+=(trkTargetCurve-trackCurve)*0.04;
+    // loop prevention: if we've curled more than ~250deg over last 20 segs, reverse
+    if(trackPts.length>20){
+      var old=trackPts[trackPts.length-20];
+      var diff=trackDir-Math.atan2(trackHead.y-old.y,trackHead.x-old.x);
+      while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
+      if(Math.abs(diff)>Math.PI*1.3){trackCurve*=-0.6;trkTargetCurve*=-0.6;}
+    }
+    trackDir+=trackCurve;
+  }
+  trackHead={x:trackHead.x+Math.cos(trackDir)*SEG,y:trackHead.y+Math.sin(trackDir)*SEG};
+  trackPts.push({x:trackHead.x,y:trackHead.y});
+}
+function closTrk(px,py){var md=Infinity,mi=0,s0=Math.max(0,trackIdx-30),s1=Math.min(trackPts.length-1,trackIdx+80);for(var i=s0;i<=s1;i++){var dx=px-trackPts[i].x,dy=py-trackPts[i].y,dd=dx*dx+dy*dy;if(dd<md){md=dd;mi=i;}}trackIdx=mi;return Math.sqrt(md);}
+function buildEdges(){
+  var hw=V.TW/2,lefts=[],rights=[];
+  for(var i=0;i<trackPts.length;i++){
+    var prev=trackPts[Math.max(0,i-1)],next=trackPts[Math.min(trackPts.length-1,i+1)];
+    var dx=next.x-prev.x,dy=next.y-prev.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+    var nx=-dy/len*hw,ny=dx/len*hw;
+    lefts.push({x:trackPts[i].x+nx,y:trackPts[i].y+ny});
+    rights.push({x:trackPts[i].x-nx,y:trackPts[i].y-ny});
+  }
+  return{lefts:lefts,rights:rights};
+}
+function fillQuad(la,lb,ra,rb,col){
+  ctx.fillStyle=col||'black';
+  var mnX=Math.min(la[0],lb[0],ra[0],rb[0]),mxX=Math.max(la[0],lb[0],ra[0],rb[0]);
+  var mnY=Math.min(la[1],lb[1],ra[1],rb[1]),mxY=Math.max(la[1],lb[1],ra[1],rb[1]);
+  if(mxX<-1||mnX>W||mxY<-1||mnY>H) return false;
+  for(var sy=Math.max(0,mnY);sy<=Math.min(H-1,mxY);sy++){
+    var xs=[];
+    var xAt=function(x1,y1,x2,y2,yy){if((y1<=yy&&yy<=y2)||(y2<=yy&&yy<=y1)){if(y1!==y2)xs.push(x1+(x2-x1)*(yy-y1)/(y2-y1));}};
+    xAt(la[0],la[1],lb[0],lb[1],sy);xAt(ra[0],ra[1],rb[0],rb[1],sy);
+    xAt(la[0],la[1],ra[0],ra[1],sy);xAt(lb[0],lb[1],rb[0],rb[1],sy);
+    if(xs.length<2) continue;
+    xs.sort(function(a,b){return a-b;});
+    var x0=Math.max(0,Math.round(xs[0])),x1=Math.min(W-1,Math.round(xs[xs.length-1]));
+    if(x1>=x0) ctx.fillRect(x0,sy,x1-x0+1,1);
+  }
+  return true;
+}
+
+// draw edge lines between two points, skipping every other 4px based on world position
+// dashPhase: if true, draw dashes using world coords so they stay fixed
+function drawLine(x1,y1,x2,y2,col,dashWorld){
+  ctx.fillStyle=col||'white';
+  if(x1<-4&&x2<-4||x1>W+4&&x2>W+4||y1<-4&&y2<-4||y1>H+4&&y2>H+4) return;
+  var dx=x2-x1,dy=y2-y1,st=Math.max(Math.abs(dx),Math.abs(dy));
+  if(!st){ctx.fillRect(Math.round(x1),Math.round(y1),1,1);return;}
+  for(var i=0;i<=st;i++){
+    var px=Math.round(x1+dx*i/st),py=Math.round(y1+dy*i/st);
+    if(dashWorld){
+      // use world position (add camera back) to anchor dash pattern
+      var wx=px+Math.round(camX),wy=py+Math.round(camY);
+      var phase=Math.floor((Math.abs(wx)+Math.abs(wy))/4)%2;
+      if(phase===0) continue;
+    }
+    if(px>=0&&px<W&&py>=0&&py<H) ctx.fillRect(px,py,1,1);
+  }
+}
+
+function strokeEdge(la,lb,ra,rb,col,dash){
+  drawLine(la[0],la[1],lb[0],lb[1],col,dash);
+  drawLine(ra[0],ra[1],rb[0],rb[1],col,dash);
+}
+
+// Check if world point (wx,wy) is inside any old road segment (behind trackIdx)
+function isUnderOldRoad(wx,wy){
+  if(trackPts.length<2) return false;
+  var hw=V.TW/2+1;
+  var e=buildEdges(),lefts=e.lefts,rights=e.rights;
+  // only check segments well behind player — those are the overpass candidates
+  var end=Math.min(trackIdx-10,trackPts.length-1);
+  for(var i=1;i<end;i++){
+    // quick distance check first
+    var mx=(trackPts[i-1].x+trackPts[i].x)/2,my=(trackPts[i-1].y+trackPts[i].y)/2;
+    var dx=wx-mx,dy=wy-my;
+    if(dx*dx+dy*dy>hw*hw*4) continue;
+    // check if point is within half-width of segment
+    var sdx=trackPts[i].x-trackPts[i-1].x,sdy=trackPts[i].y-trackPts[i-1].y;
+    var slen=Math.sqrt(sdx*sdx+sdy*sdy)||1;
+    // perpendicular distance
+    var perp=Math.abs((wx-trackPts[i-1].x)*(-sdy/slen)+(wy-trackPts[i-1].y)*(sdx/slen));
+    // along-segment distance
+    var along=(wx-trackPts[i-1].x)*(sdx/slen)+(wy-trackPts[i-1].y)*(sdy/slen);
+    if(perp<hw&&along>=-1&&along<=slen+1) return true;
+  }
+  return false;
+}
+
+
+function drawTrack(){
+  if(trackPts.length<2) return;
+  var e=buildEdges(),lefts=e.lefts,rights=e.rights;
+  var n=trackPts.length;
+
+  // "old" = segments the player has passed (behind trackIdx)
+  // "current" = near the player
+  // "new/future" = well ahead of player — these are the ones going under old road
+  // Edge rule: draw edges on everything EXCEPT segments that are far ahead (future)
+  // Future segments that loop under old road have their fill covered by old road anyway.
+  var futureStart=trackIdx+120; // edges appear only well behind player
+
+  // white background
+  ctx.fillStyle='white';ctx.fillRect(0,0,W,H);
+
+  // PASS 1: fill ALL road black
+  ctx.fillStyle='black';
+  for(var i=1;i<n;i++){
+    var la=w2s(lefts[i-1].x,lefts[i-1].y),lb=w2s(lefts[i].x,lefts[i].y);
+    var ra=w2s(rights[i-1].x,rights[i-1].y),rb=w2s(rights[i].x,rights[i].y);
+    fillQuad(la,lb,ra,rb,'black');
+  }
+
+  // PASS 2: repaint old road (behind player) on top so it wins at intersections
+  for(var i=1;i<trackIdx&&i<n;i++){
+    var la=w2s(lefts[i-1].x,lefts[i-1].y),lb=w2s(lefts[i].x,lefts[i].y);
+    var ra=w2s(rights[i-1].x,rights[i-1].y),rb=w2s(rights[i].x,rights[i].y);
+    fillQuad(la,lb,ra,rb,'black');
+  }
+
+  // PASS 3: edges for all segments UP TO futureStart (player road + past road)
+  // Future road beyond futureStart gets no edges — if it loops under old road,
+  // the old road fill covers it. If it doesn't loop, it'll get edges once player reaches it.
+  for(var i=1;i<Math.min(futureStart,n);i++){
+    var la=w2s(lefts[i-1].x,lefts[i-1].y),lb=w2s(lefts[i].x,lefts[i].y);
+    var ra=w2s(rights[i-1].x,rights[i-1].y),rb=w2s(rights[i].x,rights[i].y);
+    strokeEdge(la,lb,ra,rb,'white',false);
+  }
+
+  // PASS 4: repaint old road fill on top of edges so underpass edge lines get erased
+  for(var i=1;i<trackIdx&&i<n;i++){
+    var la=w2s(lefts[i-1].x,lefts[i-1].y),lb=w2s(lefts[i].x,lefts[i].y);
+    var ra=w2s(rights[i-1].x,rights[i-1].y),rb=w2s(rights[i].x,rights[i].y);
+    fillQuad(la,lb,ra,rb,'black');
+  }
+
+  // PASS 5: redraw old road edges on very top so overpass lines are crisp
+  for(var i=1;i<trackIdx&&i<n;i++){
+    var la=w2s(lefts[i-1].x,lefts[i-1].y),lb=w2s(lefts[i].x,lefts[i].y);
+    var ra=w2s(rights[i-1].x,rights[i-1].y),rb=w2s(rights[i].x,rights[i].y);
+    strokeEdge(la,lb,ra,rb,'white',false);
+  }
+
+  // PASS 6: centre dashes near player — world anchored so they don't slide
+  ctx.fillStyle='white';
+  var cs=Math.max(1,trackIdx-50),ce=Math.min(trackIdx+10,n-1);
+  for(var i=cs;i<ce;i++){
+    if(Math.floor(i*SEG/4)%2===0) continue;
+    var s=w2s(trackPts[i].x,trackPts[i].y);
+    if(s[0]>=0&&s[0]<W&&s[1]>=0&&s[1]<H) ctx.fillRect(s[0],s[1],1,1);
+  }
+}
+
+// --- Obstacles ---
+function hitsOb(cx,cy,cr,ob){var dx=cx-ob.x,dy=cy-ob.y;return ob.shape===1?Math.sqrt(dx*dx+dy*dy)<ob.r+cr:Math.abs(dx)<ob.r+cr&&Math.abs(dy)<ob.r*0.7+cr;}
+function mkOb(){
+  var omn=Math.min(V.OM,V.OX),omx=Math.max(V.OM,V.OX),r=Math.round(omn+Math.random()*(omx-omn));
+  if(gameMode===1) return{x:pl.x+(Math.random()-0.5)*160,y:pl.y+(Math.random()-0.5)*100,r:r,shape:Math.random()<0.5?0:1,age:0};
+  var mg=8;return{x:mg+r+Math.random()*(W-2*mg-2*r),y:mg+r+Math.random()*(H-2*mg-2*r),r:r,shape:Math.random()<0.5?0:1,age:0};
+}
+
+// --- Slalom gate ---
+function mkSGate(){
+  var side=nextSide;
+  var dist=80+Math.random()*120; // 80-200px ahead, matches maxSpawnDist=200
+  var spread=(Math.random()-0.5)*60;
+  var fx=Math.cos(pl.angle),fy=Math.sin(pl.angle),px=-fy,py=fx;
+  return{x:pl.x+fx*dist+(side===1?1:-1)*Math.abs(spread)*0.5+px*spread*0.5,
+         y:pl.y+fy*dist+(side===1?1:-1)*Math.abs(spread)*0.3+py*spread*0.5,
+         side:side,collected:false};
+}
+function drawSGate(g){
+  var s=w2s(g.x,g.y),sx=s[0],sy=s[1];
+  ctx.fillStyle='white';ctx.fillRect(sx-1,sy,3,1);ctx.fillRect(sx,sy-1,1,3);
+  ctx.fillRect(sx-2,sy-2,1,1);ctx.fillRect(sx+2,sy-2,1,1);ctx.fillRect(sx-2,sy+2,1,1);ctx.fillRect(sx+2,sy+2,1,1);
+  if(d2(pl,g)<400){ctx.fillRect(sx-4,sy,1,1);ctx.fillRect(sx+4,sy,1,1);ctx.fillRect(sx,sy-4,1,1);ctx.fillRect(sx,sy+4,1,1);}
+}
+
+// warning triangle pointing toward world position wx,wy (for slalom obstacles)
+function drawWarnDir(wx,wy,now){
+  if(Math.floor(now/120)%2===0) return;
+  // draw a small filled triangle on screen edge pointing toward the obstacle
+  drawOSI(wx,wy,null);
+}
+
+
+function genSpawn(){var side=Math.floor(Math.random()*4),m=8,x,y;if(side===0){x=m+Math.random()*(W-2*m);y=-4;}else if(side===1){x=W+4;y=m+Math.random()*(H-2*m);}else if(side===2){x=m+Math.random()*(W-2*m);y=H+4;}else{x=-4;y=m+Math.random()*(H-2*m);}return{x:x,y:y};}
+
+// --- Die / Start ---
+function die(){
+  var ex=gameMode===0?Math.max(0,Math.min(W-1,Math.round(pl.x))):pl.x;
+  var ey=gameMode===0?Math.max(0,Math.min(H-1,Math.round(pl.y))):pl.y;
+  exps.push(mkExp(ex,ey));flash=220;hi[gameMode]=Math.max(hi[gameMode],score);mode='dead';
+}
+function start(){
+  skidL=[];skidR=[];enemies=[];obstacles=[];exps=[];flash=0;survMs=0;score=0;spawnT=0;obstT=0;pendSpawn=null;trackIdx=0;turboEngaged=false;turboTxt=0;
+  if(gameMode===0){pl={x:W/2,y:H/2,angle:-Math.PI/2,vx:0,vy:0,spd:0};camX=0;camY=0;}
+  else if(gameMode===1){pl={x:200,y:200,angle:0,vx:0,vy:0,spd:0};camX=pl.x-W/2;camY=pl.y-H/2;nextSide=1;gate=mkSGate();gateScore=0;}
+  else{pl={x:20,y:200,angle:0,vx:0,vy:0,spd:0};camX=pl.x-W/2;camY=pl.y-H/2;initTrack(pl.x,pl.y);}
+  mode='play';
+}
+
+// --- Input ---
+function onL(){kL=true;if(mode!=='play')start();}
+function onR(){kR=true;if(mode!=='play')start();}
+document.addEventListener('keydown',function(e){if(e.key==='s'||e.key==='S')onL();if(e.key==='a'||e.key==='A')onR();});
+document.addEventListener('keyup',function(e){if(e.key==='s'||e.key==='S')kL=false;if(e.key==='a'||e.key==='A')kR=false;});
+document.getElementById('bL').addEventListener('mousedown',function(e){e.preventDefault();onL();});
+document.getElementById('bR').addEventListener('mousedown',function(e){e.preventDefault();onR();});
+document.addEventListener('mouseup',function(){kL=false;kR=false;});
+document.getElementById('bL').addEventListener('touchstart',function(e){e.preventDefault();onL();});
+document.getElementById('bR').addEventListener('touchstart',function(e){e.preventDefault();onR();});
+document.addEventListener('touchend',function(){kL=false;kR=false;});
+
+// ============================================================
+// MAIN LOOP
+// ============================================================
+function loop(now){
+  dT=lastT===null?16:Math.min(now-lastT,50);
+  lastT=now;
+  readV();
+
+  var sz=V.CS, cr=sz*0.4;
+  var rampedMax=V.PS; // may be overridden in track mode
+
+  if(mode==='play'){
+    survMs+=dT;
+
+    // steer direction — apply invert toggle
+    var rawL=kL, rawR=kR;
+    if(invertControls){rawL=kR;rawR=kL;}
+    var sd=rawL?-1:rawR?1:0;
+    if(rawL) pl.angle-=V.PT*dT;
+    if(rawR) pl.angle+=V.PT*dT;
+
+    // skid detection
+    var va=Math.atan2(pl.vy,pl.vx),slip=pl.angle-va;
+    while(slip>Math.PI)slip-=Math.PI*2;while(slip<-Math.PI)slip+=Math.PI*2;
+    addSkid(pl,(sd!==0)&&Math.abs(slip)>0.18,sz);
+
+    updCar(pl,sd,true,gameMode===2?rampedMax:0);
+    if(gameMode!==0) updCam();
+
+    // --- CHASE ---
+    if(gameMode===0){
+      score=Math.floor(survMs/100);if(score>hi[0])hi[0]=score;
+      // only player dies from off screen, not enemies
+      var od=offD(pl.x,pl.y);if(od>=V.OD&&mode==='play')die();
+      if(mode==='play'){
+        spawnT+=dT;
+        if(!pendSpawn&&spawnT>V.SP-2000){var sp=genSpawn();pendSpawn={x:sp.x,y:sp.y,timer:0};}
+        if(pendSpawn){pendSpawn.timer+=dT;if(pendSpawn.timer>=2000){enemies.push({x:pendSpawn.x,y:pendSpawn.y,angle:Math.atan2(pl.y-pendSpawn.y,pl.x-pendSpawn.x),vx:0,vy:0,spd:0});pendSpawn=null;spawnT=0;}}
+        var hd=(cr*2)*(cr*2);
+        for(var i=0;i<enemies.length;i++){
+          var e=enemies[i];
+          var da=Math.atan2(pl.y-e.y,pl.x-e.x)-e.angle;
+          while(da>Math.PI)da-=Math.PI*2;while(da<-Math.PI)da+=Math.PI*2;
+          var es=da>0?1:da<0?-1:0;
+          e.angle+=es*Math.min(Math.abs(da),V.ET*dT);
+          updCar(e,0,false);
+          if(eKick) kickF(e,es,V.KI*0.6);
+          // enemies NOT killed by going off screen - only by obstacles or each other
+          for(var j=0;j<obstacles.length;j++) if(obstacles[j].age>=V.OB&&hitsOb(e.x,e.y,cr,obstacles[j])){e._d=true;exps.push(mkExp(e.x,e.y));break;}
+        }
+        if(mode==='play') for(var i=0;i<enemies.length;i++){var dx=pl.x-enemies[i].x,dy=pl.y-enemies[i].y;if(dx*dx+dy*dy<hd){die();break;}}
+        for(var i=0;i<enemies.length;i++) for(var j=i+1;j<enemies.length;j++){var dx=enemies[i].x-enemies[j].x,dy=enemies[i].y-enemies[j].y;if(dx*dx+dy*dy<hd){exps.push(mkExp((enemies[i].x+enemies[j].x)/2,(enemies[i].y+enemies[j].y)/2));enemies[i]._d=true;enemies[j]._d=true;score+=10;flash=60;}}
+        enemies=enemies.filter(function(e){return!e._d;});
+        obstT+=dT;if(obstT>=V.OS){obstT=0;obstacles.push(mkOb());}
+        for(var i=0;i<obstacles.length;i++) obstacles[i].age+=dT;
+        obstacles=obstacles.filter(function(o){return o.age<V.OL;});
+        if(mode==='play') for(var i=0;i<obstacles.length;i++) if(obstacles[i].age>=V.OB&&hitsOb(pl.x,pl.y,cr,obstacles[i])){die();break;}
+      }
+    // --- SLALOM ---
+    } else if(gameMode===1){
+      if(gate&&!gate.collected&&d2(pl,gate)<81){gate.collected=true;gateScore++;flash=50;exps.push(mkExp(gate.x,gate.y));nextSide=gate.side===1?0:1;gate=mkSGate();}
+      score=gateScore;if(score>hi[1])hi[1]=score;
+      obstT+=dT;if(obstT>=V.OS){obstT=0;obstacles.push(mkOb());}
+      for(var i=0;i<obstacles.length;i++) obstacles[i].age+=dT;
+      obstacles=obstacles.filter(function(o){return o.age<V.OL;});
+      if(mode==='play') for(var i=0;i<obstacles.length;i++) if(obstacles[i].age>=V.OB&&hitsOb(pl.x,pl.y,cr,obstacles[i])){die();break;}
+    // --- TRACK ---
+    } else {
+      score=Math.floor(survMs/100);if(score>hi[2])hi[2]=score;
+      // gradually increase player max speed over time (every 10s add 0.02, cap at 1.8)
+      var rampedMax=Math.min(1.8, V.PS + Math.floor(survMs/10000)*0.02);
+      // extend ahead
+      while(dp(pl,trackHead)<LAHEAD) extTrk(false);
+      // cull behind camera — remove points well off the back of the screen
+      while(trackPts.length>10){
+        var p0=trackPts[0],s=w2s(p0.x,p0.y);
+        // cull if more than CBEHIND pixels off every screen edge
+        if(s[0]<-CBEHIND&&s[1]<-CBEHIND||s[0]>W+CBEHIND&&s[1]<-CBEHIND||
+           s[0]<-CBEHIND&&s[1]>H+CBEHIND||s[0]>W+CBEHIND&&s[1]>H+CBEHIND||
+           dp(pl,p0)>LAHEAD+CBEHIND*2){
+          trackPts.shift();
+          if(trackIdx>0) trackIdx--;
+        } else break;
+      }
+      var td=closTrk(pl.x,pl.y);
+      if(td>V.TW/2+cr&&mode==='play'){exps.push(mkExp(pl.x,pl.y));flash=250;hi[2]=Math.max(hi[2],score);mode='dead';}
+    }
+
+    for(var i=0;i<exps.length;i++){exps[i].age+=dT;for(var j=0;j<exps[i].pts.length;j++){exps[i].pts[j].x+=exps[i].pts[j].vx*dT*0.05;exps[i].pts[j].y+=exps[i].pts[j].vy*dT*0.05;}}
+    exps=exps.filter(function(e){return e.age<e.ttl;});
+    tickSkids(dT);
+    if(flash>0) flash-=dT;
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  var inv=flash>0&&Math.floor(flash/35)%2===1;
+
+  if(mode==='menu'){
+    ctx.fillStyle='black'; ctx.fillRect(0,0,W,H);
+
+    // Large letters as 5-row bitmaps, drawn at scale S with 3D offset
+    // Each letter is 4-6 columns wide at base, scaled up to fill 128px across 5 chars
+    // Scale: 128px / (5 letters * ~5cols + gaps) ≈ scale 4
+    var S=4; // pixel scale
+    var GAP=S; // gap between letters
+
+    var BIG={
+      'Z':[[1,1,1,1],[0,0,1,0],[0,1,0,0],[1,0,0,0],[1,1,1,1]],
+      'A':[[0,1,1,0],[1,0,0,1],[1,1,1,1],[1,0,0,1],[1,0,0,1]],
+      'K':[[1,0,0,1],[1,0,1,0],[1,1,0,0],[1,0,1,0],[1,0,0,1]],
+      'Y':[[1,0,0,1],[1,0,0,1],[0,1,1,0],[0,1,0,0],[0,1,0,0]],
+      'D':[[1,1,1,0],[1,0,0,1],[1,0,0,1],[1,0,0,1],[1,1,1,0]],
+      'R':[[1,1,1,0],[1,0,0,1],[1,1,1,0],[1,0,1,0],[1,0,0,1]],
+      'I':[[1,1,1],[0,1,0],[0,1,0],[0,1,0],[1,1,1]],
+      'F':[[1,1,1,1],[1,0,0,0],[1,1,1,0],[1,0,0,0],[1,0,0,0]],
+      'T':[[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]]
+    };
+
+    function bigTw(s){
+      var w=0;
+      for(var i=0;i<s.length;i++){var b=BIG[s[i]];if(b)w+=b[0].length*S+(i<s.length-1?GAP:0);}
+      return w;
+    }
+    function bigDraw(s,x,y,col){
+      ctx.fillStyle=col;
+      var cx=x;
+      for(var i=0;i<s.length;i++){
+        var b=BIG[s[i]];if(!b)continue;
+        for(var r=0;r<b.length;r++)
+          for(var c=0;c<b[r].length;c++)
+            if(b[r][c]) ctx.fillRect(cx+c*S, y+r*S, S, S);
+        cx+=b[0].length*S+GAP;
+      }
+    }
+
+    var line1='ZAKKY';
+    var line2='DRIFT';
+    var sh=2; // 3D shadow offset
+    var y1=2, y2=y1+5*S+S; // two rows with gap
+
+    // shadow pass (dark grey = drawn as sparse pixels to simulate grey on 1-bit)
+    // just offset down-right by sh pixels in black-on-black... use a checkerboard fill
+    // Actually: draw shadow as solid black rect strip, then white on top = clean 3D
+    // Draw 3D layer (offset): draw letter at x+sh, y+sh then overdraw at x,y in white
+    var x1=Math.round((W-bigTw(line1))/2);
+    var x2=Math.round((W-bigTw(line2))/2);
+
+    // shadow: draw at offset in a mid tone — simulate with every-other-pixel pattern
+    // We'll just draw solid white shadow shifted, then black fill on top of shadow,
+    // then white letter — creating a visible drop shadow
+    bigDraw(line1, x1+sh, y1+sh, 'white'); // shadow
+    bigDraw(line2, x2+sh, y2+sh, 'white');
+    // black overdraw to create shadow gap
+    bigDraw(line1, x1, y1, 'black');
+    bigDraw(line2, x2, y2, 'black');
+    // main white letter
+    bigDraw(line1, x1, y1, 'white');
+    bigDraw(line2, x2, y2, 'white');
+
+    // mode selector
+    var modes=['CHASE','COLLECT','TRACK'];
+    var totalW=0;
+    for(var i=0;i<modes.length;i++) totalW+=tw(modes[i])+(i<2?8:0);
+    var mx=Math.round((W-totalW)/2);
+    var my=H-11;
+    for(var i=0;i<modes.length;i++){
+      var mw=tw(modes[i]);
+      if(i===menuSel){
+        ctx.fillStyle='white';
+        ctx.fillRect(mx-2,my-2,mw+4,9);
+        dtxt(modes[i],mx,my,'black');
+      } else {
+        dtxt(modes[i],mx,my,'white');
+      }
+      mx+=mw+8;
+    }
+
+  } else if(mode==='title'){
+    // always black background, white text for title
+    ctx.fillStyle='black'; ctx.fillRect(0,0,W,H);
+    var mn=['CHASE','SLALOM','TRACK'][gameMode];
+    dtxt(mn,Math.round((W-tw(mn))/2),8);
+    dtxt('DRIFT RACER',Math.round((W-tw('DRIFT RACER'))/2),16);
+    if(hi[gameMode]>0) dtxt('HI '+hi[gameMode],Math.round((W-tw('HI '+hi[gameMode]))/2),30);
+    if(gameMode===2) dtxt('STAY ON TRACK',Math.round((W-tw('STAY ON TRACK'))/2),38);
+    if(Math.floor(now/500)%2===0) dtxt('HOLD A OR S',Math.round((W-tw('HOLD A OR S'))/2),50);
+
+  } else if(mode==='dead'){
+    if(!inv){
+      ctx.fillStyle='black'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='white';
+      for(var i=0;i<exps.length;i++) for(var j=0;j<exps[i].pts.length;j++){var pt=exps[i].pts[j];ctx.fillRect(Math.round(pt.x),Math.round(pt.y),1,1);}
+      dtxt('GAME OVER',Math.round((W-tw('GAME OVER'))/2),8);
+      var sc=gameMode===1?'GATES '+gateScore:'SCORE '+score;
+      dtxt(sc,Math.round((W-tw(sc))/2),18);
+      if(score>=hi[gameMode]&&score>0) dtxt('NEW HI!',Math.round((W-tw('NEW HI!'))/2),28);
+      if(Math.floor(now/600)%2===0) dtxt('HOLD A OR S',Math.round((W-tw('HOLD A OR S'))/2),48);
+    } else {
+      ctx.fillStyle='white'; ctx.fillRect(0,0,W,H);
+    }
+
+  } else {
+    // mode==='play'
+    if(gameMode===2){
+      // TRACK: white bg, black road
+      if(inv){ ctx.fillStyle='black'; ctx.fillRect(0,0,W,H); }
+      else{
+        drawTrack();
+        drawSkids('white');
+        ctx.fillStyle='white';
+        for(var i=0;i<exps.length;i++) for(var j=0;j<exps[i].pts.length;j++){var s=w2s(exps[i].pts[j].x,exps[i].pts[j].y);ctx.fillRect(s[0],s[1],1,1);}
+        var under=isUnderOldRoad(pl.x,pl.y);
+        drawCar(pl.x,pl.y,pl.angle,sz,false,under);
+        var rampSpd=Math.min(1.8,V.PS+Math.floor(survMs/10000)*0.02);
+        dtxt('S:'+score,2,2,'black');
+        dtxt('HI:'+hi[2],W-tw('HI:'+hi[2])-2,2,'black');
+        // speed bar — fills against ramped max
+        var spd2=Math.min(1,pl.spd/rampSpd),barW2=Math.round(spd2*30);
+        ctx.fillStyle='black';ctx.fillRect(2,H-3,30,1);ctx.fillRect(2,H-4,barW2,1);
+        dtxt(Math.round(pl.spd*100)+'',2,H-10,'black');
+        if(invertControls) dtxt('INV',W-tw('INV')-2,H-8,'black');
+      }
+    } else {
+      // CHASE or SLALOM: black bg
+      ctx.fillStyle=inv?'white':'black'; ctx.fillRect(0,0,W,H);
+      if(!inv){
+        drawSkids('white');
+        for(var i=0;i<obstacles.length;i++) drawOb(obstacles[i],now);
+        ctx.fillStyle='white';
+        if(gameMode===0){
+          if(pendSpawn) drawWarn(pendSpawn.x,pendSpawn.y,now);
+          for(var i=0;i<enemies.length;i++) drawCar(enemies[i].x,enemies[i].y,enemies[i].angle,sz,true);
+          for(var i=0;i<exps.length;i++) for(var j=0;j<exps[i].pts.length;j++) ctx.fillRect(Math.round(exps[i].pts[j].x),Math.round(exps[i].pts[j].y),1,1);
+          if(!isOff(pl)) drawCar(pl.x,pl.y,pl.angle,sz,false);
+          else drawEdgeInd(pl.x,pl.y,offD(pl.x,pl.y));
+          dtxt('S:'+score,2,2);
+          dtxt('HI:'+hi[0],W-tw('HI:'+hi[0])-2,2);
+          var ix=W-2;
+          if(pKick){dtxt('PK',ix-tw('PK'),H-8);ix-=tw('PK')+2;}
+          if(eKick){dtxt('EK',ix-tw('EK'),H-8);ix-=tw('EK')+2;}
+          if(invertControls) dtxt('INV',2,H-8);
+          // speed bar bottom left
+          var spd0=Math.min(1,pl.spd/V.PS),barW=Math.round(spd0*30);
+          ctx.fillStyle='white';ctx.fillRect(2,H-3,30,1); // track
+          if(barW>0) ctx.fillRect(2,H-3,barW,1);
+          ctx.fillRect(2,H-4,barW,1);
+          dtxt(Math.round(pl.spd*100)+'',2,H-10);
+        } else {
+          for(var i=0;i<exps.length;i++) for(var j=0;j<exps[i].pts.length;j++){var s=w2s(exps[i].pts[j].x,exps[i].pts[j].y);ctx.fillRect(s[0],s[1],1,1);}
+          drawCar(pl.x,pl.y,pl.angle,sz,false);
+          if(gate&&!gate.collected){if(onScr(gate.x,gate.y,0))drawSGate(gate);else drawOSI(gate.x,gate.y,dp(pl,gate));}
+          for(var i=0;i<obstacles.length;i++) if(obstacles[i].age>=V.OB&&!onScr(obstacles[i].x,obstacles[i].y,obstacles[i].r+2)) drawOSI(obstacles[i].x,obstacles[i].y,dp(pl,obstacles[i]));
+          dtxt('G:'+gateScore,2,2);
+          dtxt('HI:'+hi[1],W-tw('HI:'+hi[1])-2,2);
+          if(invertControls) dtxt('INV',2,H-8);
+          var spd1=Math.min(1,pl.spd/V.PS),barW1=Math.round(spd1*30);
+          ctx.fillStyle='white';ctx.fillRect(2,H-3,30,1);ctx.fillRect(2,H-4,barW1,1);
+          dtxt(Math.round(pl.spd*100)+'',2,H-10);
+        }
+      }
+    }
+  }
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+<!-- Added by tools/release.py to the copy of a game on the public page (site/play/<slug>.html).
+     Shows only the game screen, full size, and hides the prototype's panels and cheats.
+     The page underneath keeps running unchanged; the hidden parts are still there, just not shown. -->
+<style id="zb-play">
+html, body { margin: 0 !important; padding: 0 !important; height: 100% !important; overflow: hidden !important; background: #000 !important; }
+body > :not(#zb-stage) { display: none !important; }
+#zb-stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; }
+#zb-stage > canvas { display: block !important; position: static !important; transform: none !important; margin: 0 !important;
+  border: 0 !important; box-shadow: none !important; width: 100% !important; height: 100% !important;
+  object-fit: contain; image-rendering: pixelated; image-rendering: crisp-edges; }
+</style>
+<script>
+(function () {
+  var c = document.querySelector('#c');
+  if (!c) return;
+  var stage = document.createElement('div');
+  stage.id = 'zb-stage';
+  document.body.appendChild(stage);
+  stage.appendChild(c);
+  // Stop arrow keys and Space scrolling the page this is embedded in
+  addEventListener('keydown', function (e) {
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) >= 0) e.preventDefault();
+  }, { passive: false });
+})();
+</script>
+</body>
+</html>

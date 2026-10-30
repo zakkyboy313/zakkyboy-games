@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GRAVITY TUNNEL</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    font-family: monospace;
+    touch-action: none;
+    overflow-x: hidden;
+  }
+  #layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    width: 100%;
+  }
+  #left-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  #canvas-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  #gameCanvas {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    border: 1px solid #333;
+    width: min(512px, 100%);
+    height: auto;
+  }
+  #btn {
+    width: min(512px, 100%);
+    height: 72px;
+    background: #1a1a1a;
+    border: 2px solid #444;
+    color: #fff;
+    font-family: monospace;
+    font-size: 14px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 0.05s;
+  }
+  #btn:active, #btn.pressed { background: #2a2a2a; border-color: #888; }
+  #debug {
+    width: min(512px, 100%);
+    background: #0a0a0a;
+    border: 1px solid #333;
+    padding: 10px;
+    color: #aaa;
+    font-size: 11px;
+    overflow-y: auto;
+  }
+  #debug h3 {
+    color: #fff;
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+  }
+  .debug-section { margin-bottom: 10px; }
+  .debug-section h4 {
+    color: #888;
+    font-size: 9px;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .slider-row label {
+    width: 110px;
+    font-size: 9px;
+    color: #777;
+    flex-shrink: 0;
+  }
+  .slider-row input[type=range] {
+    flex: 1;
+    height: 3px;
+    accent-color: #fff;
+  }
+  .slider-row span {
+    width: 30px;
+    text-align: right;
+    font-size: 9px;
+    color: #ccc;
+  }
+</style>
+</head>
+<body>
+<div id="layout">
+  <div id="left-col">
+    <div id="canvas-wrap">
+      <canvas id="gameCanvas" width="128" height="64"></canvas>
+    </div>
+    <button id="btn">[ HOLD ]</button>
+  </div>
+  <div id="debug">
+    <h3>DEBUG</h3>
+    <div class="debug-section">
+      <h4>Player</h4>
+      <div class="slider-row"><label>Gravity</label><input type="range" id="sl-gravity" min="0.01" max="0.5" step="0.01" value="0.03"><span id="vl-gravity">0.03</span></div>
+      <div class="slider-row"><label>Thrust</label><input type="range" id="sl-thrust" min="0.01" max="0.6" step="0.01" value="0.06"><span id="vl-thrust">0.06</span></div>
+      <div class="slider-row"><label>Max Speed Y</label><input type="range" id="sl-maxvy" min="0.2" max="3" step="0.05" value="1.2"><span id="vl-maxvy">1.20</span></div>
+      <div class="slider-row"><label>Fire Rate (s)</label><input type="range" id="sl-firerate" min="0.5" max="6" step="0.1" value="3"><span id="vl-firerate">3.0</span></div>
+      <div class="slider-row"><label>Bullet Speed</label><input type="range" id="sl-bspeed" min="0.5" max="5" step="0.1" value="2.7"><span id="vl-bspeed">2.7</span></div>
+      <div class="slider-row"><label>Attack Power</label><input type="range" id="sl-atk" min="1" max="5" step="1" value="1"><span id="vl-atk">1</span></div>
+      <div class="slider-row"><label>Bullet Height</label><input type="range" id="sl-bulletH" min="1" max="5" step="1" value="2"><span id="vl-bulletH">2</span></div>
+      <div class="slider-row"><label>Max HP</label><input type="range" id="sl-playerhp" min="1" max="10" step="1" value="3"><span id="vl-playerhp">3</span></div>
+    </div>
+    <div class="debug-section">
+      <h4>Enemy</h4>
+      <div class="slider-row"><label>Speed</label><input type="range" id="sl-espeed" min="0.1" max="3" step="0.05" value="0.5"><span id="vl-espeed">0.50</span></div>
+      <div class="slider-row"><label>Fire Rate (s)</label><input type="range" id="sl-efirerate" min="0.5" max="6" step="0.1" value="4"><span id="vl-efirerate">4.0</span></div>
+      <div class="slider-row"><label>Bullet Speed</label><input type="range" id="sl-ebspeed" min="0.5" max="4" step="0.1" value="1.3"><span id="vl-ebspeed">1.3</span></div>
+      <div class="slider-row"><label>Max HP</label><input type="range" id="sl-ehp" min="1" max="10" step="1" value="1"><span id="vl-ehp">1</span></div>
+      <div class="slider-row"><label>Points</label><input type="range" id="sl-epoints" min="1" max="10" step="1" value="1"><span id="vl-epoints">1</span></div>
+      <div class="slider-row"><label>Spawn Rate (s)</label><input type="range" id="sl-espawn" min="0.5" max="8" step="0.25" value="3"><span id="vl-espawn">3.0</span></div>
+      <div class="slider-row"><label>↳ current rate</label><span style="font-size:9px;color:#fff;font-weight:bold" id="vl-spawnrate">3.00</span></div>
+      <div class="slider-row"><label>Powerup Every N pts</label><input type="range" id="sl-puevery" min="1" max="50" step="1" value="10"><span id="vl-puevery">10</span></div>
+    </div>
+    <div class="debug-section">
+      <h4>Powerups</h4>
+      <div style="display:flex;gap:16px;align-items:center;padding:4px 0;">
+        <div>
+          <div style="font-size:9px;color:#777;margin-bottom:3px;">HP</div>
+          <canvas id="pu-preview-hp" width="24" height="24" style="image-rendering:pixelated;width:48px;height:48px;background:#000;border:1px solid #333;"></canvas>
+        </div>
+        <div>
+          <div style="font-size:9px;color:#777;margin-bottom:3px;">FIRE RATE</div>
+          <canvas id="pu-preview-fr" width="24" height="24" style="image-rendering:pixelated;width:48px;height:48px;background:#000;border:1px solid #333;"></canvas>
+        </div>
+      </div>
+    </div>
+      <div class="slider-row"><label>Amplitude (px)</label><input type="range" id="sl-ball-amp" min="1" max="40" step="1" value="10"><span id="vl-ball-amp">10</span></div>
+      <div class="slider-row"><label>Frequency (Hz)</label><input type="range" id="sl-ball-freq" min="0.1" max="3" step="0.1" value="0.8"><span id="vl-ball-freq">0.8</span></div>
+      <div class="slider-row"><label>Speed</label><input type="range" id="sl-ball-speed" min="0.1" max="3" step="0.05" value="0.4"><span id="vl-ball-speed">0.40</span></div>
+      <div class="slider-row"><label>Knockback (px)</label><input type="range" id="sl-ball-kb" min="0" max="40" step="1" value="15"><span id="vl-ball-kb">15</span></div>
+      <div class="slider-row"><button onclick="forceSpawnBall()" style="font-size:9px;font-family:monospace;background:#1a1a1a;color:#fff;border:1px solid #444;padding:3px 8px;cursor:pointer;">SPAWN BALL</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = 128, H = 64;
+
+// ─── PIXEL FONT 3x5 ──────────────────────────────────────────────────────────
+const FONT = {
+  'A':['010','101','111','101','101'],'B':['110','101','110','101','110'],
+  'C':['011','100','100','100','011'],'D':['110','101','101','101','110'],
+  'E':['111','100','110','100','111'],'F':['111','100','110','100','100'],
+  'G':['011','100','101','101','011'],'H':['101','101','111','101','101'],
+  'I':['111','010','010','010','111'],'J':['111','001','001','101','010'],
+  'K':['101','101','110','101','101'],'L':['100','100','100','100','111'],
+  'M':['101','111','111','101','101'],'N':['101','111','111','111','101'],
+  'O':['010','101','101','101','010'],'P':['110','101','110','100','100'],
+  'Q':['010','101','101','110','011'],'R':['110','101','110','101','101'],
+  'S':['011','100','010','001','110'],'T':['111','010','010','010','010'],
+  'U':['101','101','101','101','010'],'V':['101','101','101','010','010'],
+  'W':['101','101','111','111','101'],'X':['101','101','010','101','101'],
+  'Y':['101','010','010','010','010'],'Z':['111','001','010','100','111'],
+  '0':['010','101','101','101','010'],'1':['010','110','010','010','111'],
+  '2':['110','001','010','100','111'],'3':['110','001','010','001','110'],
+  '4':['101','101','111','001','001'],'5':['111','100','110','001','110'],
+  '6':['010','100','110','101','010'],'7':['111','001','010','010','010'],
+  '8':['010','101','010','101','010'],'9':['010','101','011','001','010'],
+  ' ':['000','000','000','000','000'],':':['000','010','000','010','000'],
+  '-':['000','000','111','000','000'],'!':['010','010','010','000','010'],
+  '.':['000','000','000','000','010'],'+':['000','010','111','010','000'],
+};
+
+function drawText(text, x, y) {
+  let cx = x;
+  for (const ch of text.toUpperCase()) {
+    const g = FONT[ch] || FONT[' '];
+    for (let row = 0; row < 5; row++)
+      for (let col = 0; col < 3; col++)
+        if (g[row][col] === '1') ctx.fillRect(cx + col, y + row, 1, 1);
+    cx += 4;
+  }
+}
+
+// ─── PRIMITIVES ───────────────────────────────────────────────────────────────
+function drawLine(x0, y0, x1, y1) {
+  x0=Math.round(x0); y0=Math.round(y0); x1=Math.round(x1); y1=Math.round(y1);
+  let dx=Math.abs(x1-x0), dy=-Math.abs(y1-y0), sx=x0<x1?1:-1, sy=y0<y1?1:-1, err=dx+dy;
+  while(true){
+    ctx.fillRect(x0,y0,1,1);
+    if(x0===x1&&y0===y1) break;
+    let e2=2*err;
+    if(e2>=dy){err+=dy;x0+=sx;}
+    if(e2<=dx){err+=dx;y0+=sy;}
+  }
+}
+function drawRect(x,y,w,h){
+  drawLine(x,y,x+w-1,y); drawLine(x,y+h-1,x+w-1,y+h-1);
+  drawLine(x,y,x,y+h-1); drawLine(x+w-1,y,x+w-1,y+h-1);
+}
+function fillRect(x,y,w,h){ ctx.fillRect(Math.round(x),Math.round(y),w,h); }
+
+// Bresenham circle outline
+function drawCircle(cx,cy,r){
+  cx=Math.round(cx); cy=Math.round(cy);
+  let x=0,y=r,d=3-2*r;
+  function plot(px,py){ if(px>=0&&px<W&&py>=0&&py<H) ctx.fillRect(px,py,1,1); }
+  while(y>=x){
+    plot(cx+x,cy+y); plot(cx-x,cy+y); plot(cx+x,cy-y); plot(cx-x,cy-y);
+    plot(cx+y,cy+x); plot(cx-y,cy+x); plot(cx+y,cy-x); plot(cx-y,cy-x);
+    if(d<0) d+=4*x+6; else{d+=4*(x-y)+10;y--;} x++;
+  }
+}
+
+// ─── SLIDERS ──────────────────────────────────────────────────────────────────
+function bindSlider(id, valId, decimals) {
+  const sl = document.getElementById(id);
+  const vl = document.getElementById(valId);
+  sl.addEventListener('input', () => { vl.textContent = parseFloat(sl.value).toFixed(decimals); });
+  return () => parseFloat(sl.value);
+}
+const getGravity   = bindSlider('sl-gravity',  'vl-gravity',  2);
+const getThrust    = bindSlider('sl-thrust',   'vl-thrust',   2);
+const getMaxVY     = bindSlider('sl-maxvy',    'vl-maxvy',    2);
+const getFireRate  = bindSlider('sl-firerate', 'vl-firerate', 1);
+const getBSpeed    = bindSlider('sl-bspeed',   'vl-bspeed',   1);
+const getAtk       = bindSlider('sl-atk',      'vl-atk',      0);
+const getPlayerHP  = bindSlider('sl-playerhp', 'vl-playerhp', 0);
+const getESpeed    = bindSlider('sl-espeed',   'vl-espeed',   2);
+const getEFireRate = bindSlider('sl-efirerate','vl-efirerate',1);
+const getEBSpeed   = bindSlider('sl-ebspeed',  'vl-ebspeed',  1);
+const getEHPMax    = bindSlider('sl-ehp',      'vl-ehp',      0);
+const getEPoints   = bindSlider('sl-epoints',  'vl-epoints',  0);
+const getESpawn    = bindSlider('sl-espawn',   'vl-espawn',   1);
+const getPUEvery   = bindSlider('sl-puevery',  'vl-puevery',  0);
+const getBulletH   = bindSlider('sl-bulletH',  'vl-bulletH',  0);
+const getBallAmp   = bindSlider('sl-ball-amp',  'vl-ball-amp',  0);
+const getBallFreq  = bindSlider('sl-ball-freq', 'vl-ball-freq', 1);
+const getBallSpeed = bindSlider('sl-ball-speed','vl-ball-speed',2);
+const getBallKB    = bindSlider('sl-ball-kb',   'vl-ball-kb',   0);
+
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const PW=7, PH=5, EW=7, EH=5, BW=3;
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let player, bullets, enemyBullets, enemies, powerups, explosions;
+let score, killCount, spawnTimer, playerFireTimer;
+let pointsEarned; // only goes up, used for powerup thresholds
+let comboCount, comboButtonUses, comboPopTimer, comboPopValue, lastScoreForPU;
+let powerupsCollected;
+let bestScore=0, bestKills=0;
+let buttonHeld = false;
+let state = 'title';
+let flashTimer = 0;
+
+function initGame() {
+  const maxHp = getPlayerHP();
+  player = { x:8, y:H/2-PH/2, vy:0, hp:maxHp, maxHp, invTimer:0 };
+  bullets=[]; enemyBullets=[]; enemies=[]; powerups=[]; explosions=[]; heartBursts=[];
+  score=0; killCount=0; pointsEarned=0; spawnTimer=currentSpawnRate(); playerFireTimer=0; flashTimer=0;
+  powerupsCollected=0;
+  comboCount=0;       // current stomp chain length
+  comboButtonUses=0;  // button presses since last stomp (breaks combo at >1)
+  comboPopTimer=0;    // how long to show combo text
+  comboPopValue=0;    // what combo value to show
+  lastScoreForPU=0;   // last score threshold that triggered a powerup
+  state='play';
+}
+
+// ─── EXPLOSION ────────────────────────────────────────────────────────────────
+function makeExplosion(cx,cy,big){
+  const n=big?12:8, age=big?26:18;
+  return {
+    cx, cy, age:0, maxAge:age,
+    particles:Array.from({length:n},(_,i)=>{
+      const a=(i/n)*Math.PI*2;
+      return {dx:Math.cos(a),dy:Math.sin(a)};
+    })
+  };
+}
+function drawExplosion(e){
+  const r=(e.age/e.maxAge)*10;
+  for(const p of e.particles){
+    const px=Math.round(e.cx+p.dx*r), py=Math.round(e.cy+p.dy*r);
+    if(px>=0&&px<W&&py>=0&&py<H) ctx.fillRect(px,py,1,1);
+  }
+  if(e.age<5) fillRect(e.cx-1,e.cy-1,3,3);
+}
+
+// ─── HEART BURST ──────────────────────────────────────────────────────────────
+let heartBursts = [];
+function makeHeartBurst(cx, cy){
+  heartBursts.push({ cx, cy, age:0, maxAge:20 });
+}
+function drawHeartBurst(b){
+  const t = b.age / b.maxAge;
+  const scale = 1 + t * 3; // expand outward
+  ctx.fillStyle='#fff';
+  for(let row=0;row<5;row++)
+    for(let col=0;col<5;col++)
+      if(HEART[row][col]){
+        const ox = (col-2)*scale, oy = (row-2)*scale;
+        ctx.fillRect(Math.round(b.cx+ox), Math.round(b.cy+oy), 1, 1);
+      }
+}
+function spawnPowerup(x,y){
+  // if player is at full HP, never give a heart — give firerate instead
+  // if player is damaged, always give a heart
+  const kind = (player.hp < player.maxHp) ? 'hp' : 'firerate';
+  powerups.push({
+    kind,
+    x, baseY:y, y,
+    speed: Math.max(0.15, getESpeed()*0.5),
+  });
+}
+
+// 5×5 heart shape
+const HEART = [
+  [0,1,0,1,0],
+  [1,1,1,1,1],
+  [1,1,1,1,1],
+  [0,1,1,1,0],
+  [0,0,1,0,0],
+];
+
+function drawPowerup(p){
+  const cx=Math.round(p.x), cy=Math.round(p.y);
+  if(p.kind==='hp'){
+    for(let row=0;row<5;row++)
+      for(let col=0;col<5;col++)
+        if(HEART[row][col]) ctx.fillRect(cx-2+col, cy-2+row, 1, 1);
+  } else {
+    // gun: barrel row at cy, body 2px wide, grip drops 2px below body-left
+    ctx.fillRect(cx-3, cy,   5, 1); // barrel + body (horizontal)
+    ctx.fillRect(cx-3, cy+1, 2, 1); // grip top
+    ctx.fillRect(cx-3, cy+2, 1, 1); // grip bottom
+    // '+' to right of barrel
+    ctx.fillRect(cx+3, cy,   1, 3); // vertical
+    ctx.fillRect(cx+2, cy+1, 3, 1); // horizontal
+  }
+}
+
+function forceSpawnBall(){
+  if(state!=='play') return;
+  const BALL_R=5, eh=BALL_R*2+1;
+  const y=Math.random()*(H-eh-4)+2;
+  enemies.push({
+    type:'ball', x:W+1, y, baseY:y,
+    ballSpeed:0.20, ballAmp:12, ballFreq:1.0, ballVariant:'slow',
+    sinePhase:0, joltY:0, joltTimer:0, kbFrames:0, kbPerFrame:0,
+    hp:3, maxHp:3,
+    fireTimer:0, points:4, flashTimer:0,
+    w:eh, h:eh, speedMult:1,
+  });
+}
+function currentSpawnRate(){
+  const base = getESpawn();
+  const steps = Math.floor(score / 10);
+  const rate = base - steps * 0.2;
+  return Math.max(0.25, rate);
+}
+
+function pickEnemyType(){
+  // score-gated weighted spawn table
+  // weights: [type, weight]
+  let pool;
+  if(score < 10){
+    pool = [['tutorial',1]];
+  } else if(score < 20){
+    pool = [['basic',1]];
+  } else if(score < 25){
+    pool = [['basic',3],['shooter',1]];
+  } else if(score < 30){
+    pool = [['basic',2],['shooter',1]];
+  } else if(score < 40){
+    pool = [['basic',6],['shooter',3],['fastorb',1]];
+  } else {
+    pool = [['basic',12],['shooter',6],['fastorb',2],['sloworb',1]];
+  }
+  const total = pool.reduce((s,[,w])=>s+w, 0);
+  let r = Math.random()*total;
+  for(const [type,w] of pool){ r-=w; if(r<=0) return type; }
+  return pool[pool.length-1][0];
+}
+
+function spawnEnemy(){
+  const hp=getEHPMax();
+  const picked = pickEnemyType();
+
+  // resolve ball variants
+  let type = picked;
+  let ballSpeed=0, ballAmp=0, ballFreq=0, ballVariant='';
+  if(picked==='fastorb'){ type='ball'; ballSpeed=0.40; ballAmp=14; ballFreq=0.8; ballVariant='fast'; }
+  else if(picked==='sloworb'){ type='ball'; ballSpeed=0.20; ballAmp=12; ballFreq=1.0; ballVariant='slow'; }
+
+  const BALL_R = 5;
+  const ew = type==='ball' ? BALL_R*2+1 : EW;
+  const eh = type==='ball' ? BALL_R*2+1 : EH;
+
+  const ballHp = ballVariant==='slow' ? 3 : (type==='ball' ? 2 : hp);
+  const ballPoints = ballVariant==='slow' ? 4 : ballVariant==='fast' ? 2 : getEPoints();
+  const finalHp = type==='ball' ? ballHp : hp;
+
+  // tutorial moves 15% slower
+  const speedMult = picked==='tutorial' ? 0.85 : 1.0;
+
+  const y = Math.random()*(H-eh-4)+2;
+  enemies.push({
+    type: type==='ball' ? 'ball' : (picked==='tutorial'?'tutorial':picked),
+    x: W+1, y, baseY: y,
+    ballSpeed, ballAmp, ballFreq, ballVariant,
+    sinePhase: 0,   // accumulates only when not in knockback
+    joltY: 0, joltTimer: 0, kbFrames: 0, kbPerFrame: 0,
+    hp: finalHp, maxHp: finalHp,
+    fireTimer: Math.random()*getEFireRate(),
+    points: type==='ball' ? ballPoints : getEPoints(),
+    flashTimer: 0,
+    w: ew, h: eh,
+    speedMult,
+  });
+}
+
+// ─── AABB ─────────────────────────────────────────────────────────────────────
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){
+  return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;
+}
+function die(){
+  if(score>bestScore) bestScore=score;
+  if(killCount>bestKills) bestKills=killCount;
+  const frSl=document.getElementById('sl-firerate');
+  frSl.value=3; frSl.dispatchEvent(new Event('input'));
+  explosions.push(makeExplosion(player.x+PW/2,player.y+PH/2,true));
+  state='dead';
+}
+
+// returns true if damage was applied
+function takeDamage(){
+  if(player.invTimer>0) return false;
+  player.hp--;
+  player.invTimer=40; // ~40 frames invincible
+  flashTimer=8;
+  comboCount=0; comboButtonUses=0;
+  if(player.hp<=0){ die(); return true; }
+  return true;
+}
+
+// ─── MAIN LOOP ────────────────────────────────────────────────────────────────
+let last=null;
+function update(ts){
+  if(!last) last=ts;
+  const dt=Math.min((ts-last)/1000,0.05);
+  last=ts;
+
+  if(state==='title'||state==='dead'){
+    if(explosions) for(let i=explosions.length-1;i>=0;i--){
+      explosions[i].age++;
+      if(explosions[i].age>=explosions[i].maxAge) explosions.splice(i,1);
+    }
+    requestAnimationFrame(draw);
+    requestAnimationFrame(update);
+    return;
+  }
+
+  // PLAYER PHYSICS
+  if(buttonHeld) player.vy-=getThrust();
+  player.vy+=getGravity();
+  player.vy=Math.max(-getMaxVY(),Math.min(getMaxVY(),player.vy));
+  player.y+=player.vy;
+  if(player.y<=1){player.y=1;player.vy=0;}
+  if(player.y>=H-PH-1){player.y=H-PH-1;player.vy=0;}
+
+  // PLAYER FIRE
+  playerFireTimer-=dt;
+  if(playerFireTimer<=0){
+    playerFireTimer=getFireRate();
+    const BH=getBulletH();
+    bullets.push({x:player.x+Math.floor(PW/2)-Math.floor(BW/2), y:player.y+Math.floor((PH-BH)/2), vx:getBSpeed()*60, atk:getAtk(), bh:BH});
+  }
+
+  // BULLETS
+  for(let i=bullets.length-1;i>=0;i--){
+    bullets[i].x+=bullets[i].vx*dt;
+    if(bullets[i].x>W+4) bullets.splice(i,1);
+  }
+
+  // SPAWN
+  spawnTimer-=dt;
+  if(spawnTimer<=0){spawnTimer=currentSpawnRate();spawnEnemy();}
+  document.getElementById('vl-spawnrate').textContent=currentSpawnRate().toFixed(2);
+
+  // ENEMIES
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    // ball movement + sine
+    if(e.type==='ball'){
+      if(e.kbFrames > 0){
+        // knockback: move right, sine phase frozen
+        e.x += e.kbPerFrame;
+        e.kbFrames--;
+      } else {
+        // normal: move left, advance sine phase
+        e.x -= e.ballSpeed*60*dt;
+        e.sinePhase += e.ballFreq * dt * 0.15;
+        e.y = e.baseY + Math.sin(e.sinePhase * Math.PI * 2) * e.ballAmp;
+        if(e.joltTimer>0){
+          e.y += e.joltY * (e.joltTimer/10);
+          e.joltTimer--;
+        }
+      }
+    } else {
+      e.x -= getESpeed()*60*dt*(e.speedMult||1);
+    }
+    if(e.flashTimer>0) e.flashTimer--;
+
+    // nosedive physics — spins clockwise, falls, then explodes
+    if(e.nosedive){
+      e.nosediveVY += 0.06;
+      e.nosediveVY = Math.min(e.nosediveVY, 1.0);
+      e.y += e.nosediveVY;
+      e.x -= getESpeed()*15*dt;
+      e.spinAngle += 0.25; // clockwise spin in radians per frame
+      if(e.y > H+4 || e.spinAngle > Math.PI*2){
+        // explode when full rotation done or off screen
+        explosions.push(makeExplosion(e.x+e.w/2, e.y+e.h/2, false));
+        enemies.splice(i,1);
+        continue;
+      }
+      if(e.flashTimer>0) e.flashTimer--;
+      continue;
+    }
+
+    // fire — shooters only
+    if(e.type==='shooter'){
+      e.fireTimer-=dt;
+      if(e.fireTimer<=0){
+        e.fireTimer=getEFireRate();
+        enemyBullets.push({x:e.x, y:e.y+Math.floor(e.h/2), vx:-getEBSpeed()*60});
+      }
+    }
+
+    // player bullets hit enemy
+    for(let j=bullets.length-1;j>=0;j--){
+      if(aabb(bullets[j].x,bullets[j].y,BW,bullets[j].bh,e.x,e.y,e.w,e.h)){
+        e.hp-=bullets[j].atk;
+        e.flashTimer=6;
+        // spring knockback on ball hit
+        if(e.type==='ball' && e.hp>0){
+          e.joltY = (Math.random()<0.5?1:-1) * 4;
+          e.joltTimer = 10;
+          e.kbFrames = 15;          // spread 25px over 15 frames
+          e.kbPerFrame = 25 / 15;   // ~1.67px per frame
+          e.baseY = e.y;
+        }
+        bullets.splice(j,1);
+        if(e.hp<=0){
+          const pts = e.points;
+          score += pts;
+          pointsEarned += pts;
+          killCount++;
+          explosions.push(makeExplosion(e.x+e.w/2,e.y+e.h/2,false));
+          const puEvery=getPUEvery();
+          if(puEvery>0 && Math.floor(pointsEarned/puEvery) > Math.floor((pointsEarned-pts)/puEvery)){
+            spawnPowerup(e.x+e.w/2, e.y+e.h/2);
+            lastScoreForPU=pointsEarned;
+          }
+          enemies.splice(i,1);
+          break;
+        }
+      }
+    }
+
+    // enemy body hits player
+    if(i<enemies.length && enemies[i]){
+      if(aabb(enemies[i].x,enemies[i].y,enemies[i].w,enemies[i].h,player.x,player.y,PW,PH)){
+        const playerBottom = player.y + PH;
+        const enemyTop = enemies[i].y;
+        const stomping = player.vy > 0 && playerBottom <= enemyTop + 3;
+
+        if(enemies[i].type==='ball'){
+          if(player.invTimer>0){ continue; }
+          explosions.push(makeExplosion(enemies[i].x+enemies[i].w/2,enemies[i].y+enemies[i].h/2,false));
+          enemies.splice(i,1);
+          takeDamage();
+          continue;
+        }
+
+        if(stomping){
+          comboCount = Math.min(comboCount + 1, 5);
+          comboButtonUses = 0;
+          const pts = comboCount;
+          const prevEarned = pointsEarned;
+          score += pts;
+          pointsEarned += pts;
+          killCount++;
+          if(comboCount > 1){ comboPopValue=comboCount; comboPopTimer=40; }
+          const puEvery=getPUEvery();
+          if(puEvery>0 && Math.floor(pointsEarned/puEvery) > Math.floor(prevEarned/puEvery)){
+            spawnPowerup(enemies[i].x+enemies[i].w/2, enemies[i].y+enemies[i].h/2);
+          }
+          player.vy = -getMaxVY() * 0.6;
+          // nosedive instead of exploding
+          enemies[i].nosedive = true;
+          enemies[i].nosediveVY = 0;
+          enemies[i].spinAngle = 0;
+          enemies[i].stomped = true; // no more damage, no more shooting
+          // don't splice — enemy stays for nosedive animation
+        } else {
+          if(player.invTimer<=0){
+            enemies.splice(i,1);
+            takeDamage();
+          }
+        }
+        continue;
+      }
+      if(enemies[i].x+enemies[i].w<0){
+        score = Math.max(0, score - 1);
+        enemies.splice(i,1);
+      }
+    }
+  }
+
+  // ENEMY BULLETS
+  for(let i=enemyBullets.length-1;i>=0;i--){
+    const b=enemyBullets[i];
+    b.x+=b.vx*dt;
+    if(aabb(b.x,b.y,BW,1,player.x,player.y,PW,PH)){
+      enemyBullets.splice(i,1);
+      takeDamage();
+      continue;
+    }
+    if(b.x<-4) enemyBullets.splice(i,1);
+  }
+
+  // POWERUPS
+  for(let i=powerups.length-1;i>=0;i--){
+    const p=powerups[i];
+    p.x-=p.speed*60*dt;
+    const dist=(W+1)-p.x;
+    p.y=p.baseY+Math.sin(dist*0.08)*6;  // position-driven, no clamp
+
+    // collect
+    if(aabb(p.x-5,p.y-5,10,10,player.x,player.y,PW,PH)){
+      if(p.kind==='hp'){
+        if(player.hp<player.maxHp) player.hp++;
+        makeHeartBurst(p.x, p.y);
+      } else if(p.kind==='firerate'){
+        // bake the bonus into playerFireTimer so next shot comes sooner
+        const newRate = Math.max(0.3, getFireRate() - 0.5);
+        // update the slider value directly
+        const sl=document.getElementById('sl-firerate');
+        sl.value=newRate;
+        sl.dispatchEvent(new Event('input'));
+      }
+      powerupsCollected++;
+      if(p.kind!=='hp') explosions.push(makeExplosion(p.x,p.y,false)); // non-heart gets normal explosion
+      flashTimer=3;
+      powerups.splice(i,1);
+      continue;
+    }
+    if(p.x<-12) powerups.splice(i,1);
+  }
+
+  // EXPLOSIONS
+  for(let i=explosions.length-1;i>=0;i--){
+    explosions[i].age++;
+    if(explosions[i].age>=explosions[i].maxAge) explosions.splice(i,1);
+  }
+
+  if(flashTimer>0) flashTimer--;
+  if(comboPopTimer>0) comboPopTimer--;
+  if(player.invTimer>0) player.invTimer--;
+  for(let i=heartBursts.length-1;i>=0;i--){
+    heartBursts[i].age++;
+    if(heartBursts[i].age>=heartBursts[i].maxAge) heartBursts.splice(i,1);
+  }
+
+  requestAnimationFrame(draw);
+  requestAnimationFrame(update);
+}
+
+// ─── DRAW ─────────────────────────────────────────────────────────────────────
+function draw(){
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fff';
+
+  if(state==='title'){
+    const title='ZAKKY GUN';
+    const SCALE=3;
+    const charW=3*SCALE, charH=5*SCALE*2, charGap=SCALE;
+    const totalW=title.length*charW+(title.length-1)*charGap;
+    const titleX=Math.floor((W-totalW)/2);
+    const belowH=5+3+5;
+    const totalH=charH+4+belowH;
+    const titleY=Math.floor((H-totalH)/2);
+
+    // collect lit pixel blocks
+    const litPixels=[];
+    let tcx=titleX;
+    for(const ch of title){
+      const g=FONT[ch]||FONT[' '];
+      for(let row=0;row<5;row++)
+        for(let col=0;col<3;col++)
+          if(g[row][col]==='1')
+            litPixels.push({px:tcx+col*SCALE, py:titleY+row*SCALE*2});
+      tcx+=charW+charGap;
+    }
+
+    // draw all blocks solid white
+    ctx.fillStyle='#fff';
+    for(const {px,py} of litPixels)
+      ctx.fillRect(px, py, SCALE, SCALE*2);
+
+    // punch bullet holes at fixed indices — 2×2 black hole with 1px crack ring
+    const holeIndices=[3,9,15,22,29,35,42,48,54,60,66];
+    for(const idx of holeIndices){
+      if(idx>=litPixels.length) continue;
+      const {px,py}=litPixels[idx];
+      const hx=px+1, hy=py+2;
+      ctx.fillStyle='#fff';
+      ctx.fillRect(hx-1,hy-1,4,1); // top crack
+      ctx.fillRect(hx-1,hy+2,4,1); // bottom crack
+      ctx.fillRect(hx-1,hy,  1,2); // left crack
+      ctx.fillRect(hx+2, hy,  1,2); // right crack
+      ctx.fillStyle='#000';
+      ctx.fillRect(hx, hy, 2, 2);  // hole
+    }
+
+    ctx.fillStyle='#fff';
+    const belowY=titleY+charH+4;
+    const bestStr='BEST '+bestScore;
+    drawText(bestStr, Math.floor((W-bestStr.length*4)/2), belowY);
+    if(Math.floor(Date.now()/500)%2===0){
+      const pb='PRESS BUTTON';
+      drawText(pb, Math.floor((W-pb.length*4)/2), belowY+8);
+    }
+    return;
+  }
+
+  if(state==='dead'){
+    const DS=2; // pixel scale for DEAD
+    const deadWord='DEAD';
+    const deadCharW=3*DS, deadCharH=5*DS, deadGap=DS;
+    const deadW=deadWord.length*deadCharW+(deadWord.length-1)*deadGap;
+
+    // total block: DEAD + 3 + score row + 2 + kills row + 3 + press button
+    const rowH=5, gap1=3, gap2=2, gap3=4;
+    const totalH=deadCharH+gap1+rowH+gap2+rowH+gap3+rowH;
+    const blockY=Math.floor((H-totalH)/2);
+
+    // draw DEAD centered
+    let dcx=Math.floor((W-deadW)/2);
+    for(const ch of deadWord){
+      const g=FONT[ch]||FONT[' '];
+      for(let row=0;row<5;row++)
+        for(let col=0;col<3;col++)
+          if(g[row][col]==='1') ctx.fillRect(dcx+col*DS, blockY+row*DS, DS, DS);
+      dcx+=deadCharW+deadGap;
+    }
+
+    ctx.fillStyle='#fff';
+    const scoreY=blockY+deadCharH+gap1;
+    const killsY=scoreY+rowH+gap2;
+    const pbY=killsY+rowH+gap3;
+
+    // score row: left half score, right half best
+    const scoreL='SCORE:'+score;
+    const scoreR='BEST:'+bestScore;
+    drawText(scoreL, Math.floor((W/2-scoreL.length*4)/2), scoreY);
+    drawText(scoreR, Math.floor(W/2+(W/2-scoreR.length*4)/2), scoreY);
+
+    // kills row
+    const killsL='KILLS:'+killCount;
+    const killsR='BEST:'+bestKills;
+    drawText(killsL, Math.floor((W/2-killsL.length*4)/2), killsY);
+    drawText(killsR, Math.floor(W/2+(W/2-killsR.length*4)/2), killsY);
+
+    // press button
+    if(Math.floor(Date.now()/500)%2===0){
+      const pb='PRESS BUTTON';
+      drawText(pb, Math.floor((W-pb.length*4)/2), pbY);
+    }
+    for(const e of explosions) drawExplosion(e);
+    return;
+  }
+
+  // DAMAGE FLASH — border flicker
+  if(flashTimer>0&&flashTimer%2===0){
+    for(let x=0;x<W;x++){ctx.fillRect(x,0,1,2);ctx.fillRect(x,H-2,1,2);}
+    for(let y=0;y<H;y++){ctx.fillRect(0,y,2,1);ctx.fillRect(W-2,y,2,1);}
+  }
+
+  // PLAYER — blinks during invincibility
+  if(!(player.invTimer>0 && player.invTimer%4<2)){
+    fillRect(player.x,player.y,PW,PH);
+  }
+
+  // PLAYER BULLETS
+  for(const b of bullets) fillRect(b.x,b.y,BW,b.bh);
+
+  // ENEMIES
+  for(const e of enemies){
+    if(e.flashTimer>0&&e.flashTimer%2===0) continue;
+    const ex=Math.round(e.x), ey=Math.round(e.y);
+
+    // nosediving — spinning rect
+    if(e.nosedive){
+      const cx = ex + e.w/2, cy = ey + e.h/2;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(e.spinAngle);
+      ctx.fillStyle='#fff';
+      // draw outline rect centred at origin
+      const hw=e.w/2, hh=e.h/2;
+      drawLine(-hw,-hh, hw,-hh);
+      drawLine(-hw, hh, hw, hh);
+      drawLine(-hw,-hh,-hw, hh);
+      drawLine( hw,-hh, hw, hh);
+      ctx.restore();
+      continue;
+    }
+
+    if(e.type==='ball'){
+      const BALL_R = 5;
+      const bcx = ex+BALL_R, bcy = Math.round(e.y)+BALL_R;
+      drawCircle(bcx, bcy, BALL_R);
+      // slow ball: bowed equator touching both circle edges
+      if(e.ballVariant==='slow'){
+        // arc from bcx-BALL_R+1 to bcx+BALL_R-1, max bow 1px at centre
+        for(let dx=-(BALL_R-1);dx<=(BALL_R-1);dx++){
+          const t=dx/(BALL_R-1); // -1 to 1
+          const bow=Math.round((1-t*t)*1); // parabola max 1px
+          ctx.fillRect(bcx+dx, bcy+bow, 1, 1);
+        }
+      }
+      // cracks when 1hp left (any ball variant)
+      if(e.hp===1 && e.maxHp>1){
+        drawLine(bcx, bcy, bcx+3, bcy-2);
+        drawLine(bcx, bcy, bcx-2, bcy+3);
+        drawLine(bcx, bcy, bcx+2, bcy+3);
+      }
+    } else {
+      drawRect(ex, ey, e.w, e.h);
+      if(e.maxHp>1){
+        const filled=Math.ceil((e.hp/e.maxHp)*e.w);
+        for(let p=0;p<filled;p++) ctx.fillRect(ex+p,ey-2,1,1);
+      }
+      // no-shoot indicator: small dot bottom-right corner
+      if(e.type==='basic' || e.type==='tutorial'){
+        ctx.fillRect(ex+e.w-2, ey+e.h-2, 1, 1);
+      }
+    }
+
+    // fire indicator — shooters only
+    if(e.type==='shooter'){
+      const eFrac = 1 - (e.fireTimer / getEFireRate());
+      const eBarLen = eFrac >= 0.75 ? 2 : eFrac >= 0.5 ? 1 : 0;
+      if(eBarLen > 0) ctx.fillRect(ex - eBarLen, ey+2, eBarLen, 1);
+    }
+  }
+
+  // ENEMY BULLETS
+  for(const b of enemyBullets) fillRect(b.x,b.y,BW,1);
+
+  // POWERUPS
+  for(const p of powerups) drawPowerup(p);
+
+  // EXPLOSIONS
+  for(const e of explosions) drawExplosion(e);
+
+  // HEART BURSTS
+  for(const b of heartBursts) drawHeartBurst(b);
+
+  // TARGETING DOT — ray cast rightward from bullet Y, snap to nearest enemy or right wall
+  const dotY = Math.round(player.y) + Math.floor(PH/2);
+  let dotX = W - 1;
+  let hitEnemy = null;
+  for(const e of enemies){
+    const ex = Math.round(e.x), ey = Math.round(e.y);
+    if(dotY >= ey && dotY < ey + e.h && ex > player.x + PW){
+      if(ex < dotX){ dotX = ex; hitEnemy = e; }
+    }
+  }
+  if(hitEnemy){
+    ctx.fillRect(dotX - 2, dotY, 1, 1); // 2px proud of enemy left edge
+  } else {
+    ctx.fillRect(W - 1, dotY, 1, 1);
+  }
+
+  // HUD: score
+  drawText('S'+score, 1, 1);
+
+  // HUD: HP pips top-right
+  for(let i=0;i<player.maxHp;i++){
+    const px=W-(player.maxHp-i)*5+1;
+    if(i<player.hp) fillRect(px,1,3,3);
+    else drawRect(px,1,3,3);
+  }
+
+  // FIRE RETICULE — single bar on row 3, extends then fires
+  const cdFrac = 1 - (playerFireTimer / getFireRate());
+  const sx = Math.round(player.x) + PW;
+  const ry = Math.round(player.y);
+  const barLen = cdFrac >= 0.75 ? 2 : cdFrac >= 0.5 ? 1 : 0;
+  if(barLen > 0) ctx.fillRect(sx, ry+2, barLen, 1);
+
+  // POWERUP COUNTDOWN — tiny circle icon + number bottom-right
+  const puEvery=getPUEvery();
+  if(puEvery>0){
+    const nextPU=puEvery-(pointsEarned%puEvery);
+    if(nextPU<puEvery){
+      const txt=String(nextPU);
+      drawText(txt, W-txt.length*4-8, H-7);
+      drawCircle(W-4, H-5, 2);
+    }
+  }
+
+  // COMBO POP — flash combo multiplier above player
+  if(comboPopTimer>0){
+    const alpha = comboPopTimer > 10 ? 1 : comboPopTimer/10;
+    if(Math.floor(comboPopTimer/3)%2===0){
+      drawText('X'+comboPopValue, player.x-2, player.y-8);
+    }
+  }
+}
+
+// ─── INPUT ────────────────────────────────────────────────────────────────────
+function pressStart(e){
+  e.preventDefault();
+  buttonHeld=true;
+  if(state==='title'||state==='dead'){ initGame(); return; }
+  // combo: allow 1 button press between stomps; 2nd press breaks chain
+  if(comboCount>0){
+    comboButtonUses++;
+    if(comboButtonUses>1){ comboCount=0; comboButtonUses=0; }
+  }
+}
+function pressEnd(e){ e.preventDefault(); buttonHeld=false; }
+
+const btn=document.getElementById('btn');
+btn.addEventListener('mousedown',pressStart);
+btn.addEventListener('mouseup',pressEnd);
+btn.addEventListener('mouseleave',pressEnd);
+btn.addEventListener('touchstart',pressStart,{passive:false});
+btn.addEventListener('touchend',pressEnd,{passive:false});
+btn.addEventListener('touchcancel',pressEnd,{passive:false});
+document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();pressStart(e);}});
+document.addEventListener('keyup',e=>{if(e.code==='Space'){e.preventDefault();pressEnd(e);}});
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+explosions=[];
+
+// Draw powerup previews into debug canvases
+function drawPowerupPreview(canvasId, kind){
+  const c = document.getElementById(canvasId);
+  const pc = c.getContext('2d');
+  pc.fillStyle='#000';
+  pc.fillRect(0,0,24,24);
+  pc.fillStyle='#fff';
+  const cx=12, cy=12;
+  if(kind==='hp'){
+    for(let row=0;row<5;row++)
+      for(let col=0;col<5;col++)
+        if(HEART[row][col]) pc.fillRect(cx-2+col, cy-2+row, 1, 1);
+  } else {
+    pc.fillRect(cx-3, cy,   5, 1);
+    pc.fillRect(cx-3, cy+1, 2, 1);
+    pc.fillRect(cx-3, cy+2, 1, 1);
+    pc.fillRect(cx+3, cy,   1, 3);
+    pc.fillRect(cx+2, cy+1, 3, 1);
+  }
+}
+drawPowerupPreview('pu-preview-hp', 'hp');
+drawPowerupPreview('pu-preview-fr', 'firerate');
+
+requestAnimationFrame(ts=>{ draw(); requestAnimationFrame(update); });
+</script>
+<!-- Added by tools/release.py to the copy of a game on the public page (site/play/<slug>.html).
+     Shows only the game screen, full size, and hides the prototype's panels and cheats.
+     The page underneath keeps running unchanged; the hidden parts are still there, just not shown. -->
+<style id="zb-play">
+html, body { margin: 0 !important; padding: 0 !important; height: 100% !important; overflow: hidden !important; background: #000 !important; }
+body > :not(#zb-stage) { display: none !important; }
+#zb-stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; }
+#zb-stage > canvas { display: block !important; position: static !important; transform: none !important; margin: 0 !important;
+  border: 0 !important; box-shadow: none !important; width: 100% !important; height: 100% !important;
+  object-fit: contain; image-rendering: pixelated; image-rendering: crisp-edges; }
+</style>
+<script>
+(function () {
+  var c = document.querySelector('#gameCanvas');
+  if (!c) return;
+  var stage = document.createElement('div');
+  stage.id = 'zb-stage';
+  document.body.appendChild(stage);
+  stage.appendChild(c);
+  // Stop arrow keys and Space scrolling the page this is embedded in
+  addEventListener('keydown', function (e) {
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) >= 0) e.preventDefault();
+  }, { passive: false });
+})();
+</script>
+</body>
+</html>

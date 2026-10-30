@@ -34,24 +34,65 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--serif);
 .steps li::before{content:counter(s);display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--line-2);border-radius:50%;font:500 13px "JetBrains Mono",ui-monospace,monospace;color:var(--text);margin-bottom:12px}
 .steps b{color:var(--text);font-weight:600}
 
-/* Groups */
-.group{margin-top:44px}
-.group-head{display:flex;align-items:baseline;gap:12px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--line)}
-.group-head h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em}
-.tag{font:500 12px "JetBrains Mono",ui-monospace,monospace;color:var(--text);border:1px solid var(--line-2);border-radius:99px;padding:2px 9px}
-.count{margin-left:auto;color:var(--faint);font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+/* Filter */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.chip{background:transparent;color:var(--muted);border:1px solid var(--line-2);border-radius:99px;padding:6px 14px;font:14px var(--serif);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.chip span{font:12px "JetBrains Mono",ui-monospace,monospace;color:var(--faint);margin-left:4px}
+.chip:hover{color:var(--text);border-color:var(--text)}
+.chip[aria-pressed="true"]{background:var(--text);color:#000;border-color:var(--text)}
+.chip[aria-pressed="true"] span{color:rgba(0,0,0,.55)}
 
-/* Cards */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;transition:border-color .15s,background .15s,transform .15s}
-.card:hover{border-color:var(--line-2);background:var(--surface-2);transform:translateY(-2px)}
-.card h3{margin:0 0 6px;font-size:18px;font-weight:600;letter-spacing:-.01em}
-.blurb{margin:0;color:var(--muted);font-size:14px}
-.pins{margin:12px 0 0;color:var(--faint);font:12px/1.5 "JetBrains Mono",ui-monospace,monospace}
-.actions{display:flex;align-items:center;gap:14px;margin-top:auto;padding-top:18px}
-.install{background:var(--text);color:#000;border:0;border-radius:99px;padding:9px 22px;font:600 15px var(--serif);cursor:pointer;transition:opacity .15s}
+/* List */
+.list{border-top:1px solid var(--line)}
+.game{border-bottom:1px solid var(--line)}
+.game[hidden]{display:none}
+.row{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:18px;width:100%;padding:14px 8px;cursor:pointer;border-radius:12px;transition:background .15s}
+.row:hover{background:var(--surface)}
+.row:focus-visible{outline:2px solid var(--text);outline-offset:-2px}
+.thumb{flex:none;width:96px;height:48px;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.thumb img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.row-text{flex:1;min-width:0;display:flex;flex-direction:column}
+.name{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.row-blurb{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{flex:none;font:500 12px "JetBrains Mono",ui-monospace,monospace;color:var(--text);border:1px solid var(--line-2);border-radius:99px;padding:2px 9px}
+.chev{flex:none;width:18px;height:18px;color:var(--faint);transition:transform .25s}
+.game.open .chev{transform:rotate(180deg);color:var(--text)}
+
+/* Slide-open details */
+.detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+.game.open .detail{grid-template-rows:1fr}
+.detail-inner{overflow:hidden;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;padding:0 8px}
+.game.open .detail-inner{padding-bottom:26px;padding-top:6px}
+.stage{display:flex;flex-direction:column;gap:12px}
+.screen{position:relative;aspect-ratio:2/1;background:#000;border:1px solid var(--line-2);border-radius:10px;overflow:hidden}
+.stage.portrait .screen{aspect-ratio:1/2;height:420px;margin:0 auto}
+.shot{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;transition:opacity .2s}
+.shot-play{opacity:0}
+.screen:hover .shot-play{opacity:1}
+.screen:hover .shot-title:has(+.shot-play){opacity:0}
+.screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.blurb{margin:0;color:var(--muted);font-size:15px}
+.pins,.keys{margin:12px 0 0;color:var(--faint);font:12px/1.6 "JetBrains Mono",ui-monospace,monospace}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding-top:20px}
+.install,.play{border-radius:99px;padding:9px 22px;font:600 15px var(--serif);cursor:pointer;transition:opacity .15s,border-color .15s}
+.install{background:var(--text);color:#000;border:0}
 .install:hover{opacity:.85}
-.install:focus-visible,.dl:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.play{background:transparent;color:var(--text);border:1px solid var(--line-2)}
+.play:hover{border-color:var(--text)}
+.play[hidden]{display:none}
+.install:focus-visible,.play:focus-visible,.dl:focus-visible,.chip:focus-visible,.pad button:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+
+/* On-screen buttons while playing */
+.pad{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;user-select:none;-webkit-user-select:none;touch-action:none}
+.pad button{min-width:56px;height:48px;padding:0 12px;background:var(--surface-2);color:var(--text);border:1px solid var(--line-2);border-radius:12px;font:600 16px var(--serif);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;touch-action:none}
+.pad button small{font:400 10px "JetBrains Mono",ui-monospace,monospace;color:var(--faint)}
+.pad button.on{background:var(--text);color:#000}
+.pad button.on small{color:rgba(0,0,0,.55)}
+.dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,44px);gap:4px;margin-right:12px}
+.dpad button{min-width:0;height:auto;padding:0}
+.dpad [data-pad=up]{grid-area:1/2}.dpad [data-pad=left]{grid-area:2/1}.dpad [data-pad=right]{grid-area:2/3}.dpad [data-pad=down]{grid-area:3/2}
+.stop{background:none;border:0;color:var(--faint);font:13px "JetBrains Mono",ui-monospace,monospace;cursor:pointer;align-self:center;padding:4px}
+.stop:hover{color:var(--text)}
 .dl{color:var(--faint);font:13px "JetBrains Mono",ui-monospace,monospace;text-decoration:none}
 .dl:hover{color:var(--text)}
 .warn{color:var(--muted);font-size:13px}
@@ -65,10 +106,18 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
 @media (max-width:800px){
   .steps{grid-template-columns:1fr 1fr}
   .help{grid-template-columns:1fr}
+  .detail-inner{grid-template-columns:1fr;gap:18px}
 }
 @media (max-width:480px){
   .hero{padding:44px 0 28px}
   .steps{grid-template-columns:1fr}
+  .row{gap:12px}
+  .thumb{width:72px;height:36px}
+  .tag{display:none}
+  .stage.portrait .screen{height:340px}
+}
+@media (prefers-reduced-motion:reduce){
+  .detail,.chev,.shot,.row{transition:none}
 }
 </style>
 </head>
@@ -86,146 +135,209 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
     <li>Wait for <b>Installation complete</b>, then press reset.</li>
   </ol>
 
-    <section class="group">
-      <div class="group-head">
-        <h2>1 button</h2>
-        <span class="tag">ZB-1</span>
-        <span class="count">4 games</span>
-      </div>
-      <div class="grid">
-        <article class="card">
-          <h3>Zakky Pixel</h3>
-          <p class="blurb">The first ZakkyBoy game: a one-button helicopter.</p>
-          <p class="pins">Button: GPIO20</p>
-          <div class="actions">
-            <esp-web-install-button manifest="firmware/zakky-pixel.json">
-              <button slot="activate" class="install">Install</button>
-              <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
-              <span slot="not-allowed" class="warn">Open this page over https to install.</span>
-            </esp-web-install-button>
-            <a class="dl" href="firmware/zakky-pixel.bin" download>.bin</a>
+  <nav class="filters" aria-label="Filter by number of buttons"><button class="chip" type="button" data-filter="all" aria-pressed="true">All <span>8</span></button><button class="chip" type="button" data-filter="1" aria-pressed="false">1 button <span>4</span></button><button class="chip" type="button" data-filter="2" aria-pressed="false">2 buttons <span>2</span></button><button class="chip" type="button" data-filter="6" aria-pressed="false">6 buttons <span>1</span></button><button class="chip" type="button" data-filter="7" aria-pressed="false">7 buttons <span>1</span></button></nav>
+  <section class="list">
+      <article class="game" data-buttons="1" data-slug="zakky-pixel" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
+        <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-pixel">
+          <span class="thumb"><img src="assets/shots/zakky-pixel-title.png" alt="" loading="lazy"></span>
+          <span class="row-text"><span class="name">Zakky Pixel</span><span class="row-blurb">The first ZakkyBoy game: a one-button helicopter.</span></span>
+          <span class="tag">ZB-1</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="detail" id="d-zakky-pixel"><div class="detail-inner">
+          <div class="stage"><div class="screen"><img class="shot shot-title" src="assets/shots/zakky-pixel-title.png" alt="Zakky Pixel: title screen" loading="lazy"><img class="shot shot-play" src="assets/shots/zakky-pixel-play.png" alt="Zakky Pixel: gameplay" loading="lazy"></div></div>
+          <div class="info">
+            <p class="blurb">The first ZakkyBoy game: a one-button helicopter.</p>
+            <p class="pins">1 button · Button: GPIO20</p>
+            <p class="keys">Keyboard: Space = A</p>
+            <div class="actions">
+              <button class="play" type="button">Play in browser</button>
+              <esp-web-install-button manifest="firmware/zakky-pixel.json">
+                <button slot="activate" class="install">Install</button>
+                <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
+                <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+              </esp-web-install-button>
+              <a class="dl" href="firmware/zakky-pixel.bin" download>.bin</a>
+            </div>
           </div>
-        </article>
-        <article class="card">
-          <h3>Zakky Gun</h3>
-          <p class="blurb">One-button arcade shooter.</p>
-          <p class="pins">Button: GPIO20</p>
-          <div class="actions">
-            <esp-web-install-button manifest="firmware/zakky-gun.json">
-              <button slot="activate" class="install">Install</button>
-              <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
-              <span slot="not-allowed" class="warn">Open this page over https to install.</span>
-            </esp-web-install-button>
-            <a class="dl" href="firmware/zakky-gun.bin" download>.bin</a>
+        </div></div>
+      </article>
+      <article class="game" data-buttons="1" data-slug="zakky-gun" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
+        <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-gun">
+          <span class="thumb"><img src="assets/shots/zakky-gun-title.png" alt="" loading="lazy"></span>
+          <span class="row-text"><span class="name">Zakky Gun</span><span class="row-blurb">One-button arcade shooter.</span></span>
+          <span class="tag">ZB-1</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="detail" id="d-zakky-gun"><div class="detail-inner">
+          <div class="stage"><div class="screen"><img class="shot shot-title" src="assets/shots/zakky-gun-title.png" alt="Zakky Gun: title screen" loading="lazy"><img class="shot shot-play" src="assets/shots/zakky-gun-play.png" alt="Zakky Gun: gameplay" loading="lazy"></div></div>
+          <div class="info">
+            <p class="blurb">One-button arcade shooter.</p>
+            <p class="pins">1 button · Button: GPIO20</p>
+            <p class="keys">Keyboard: Space = A</p>
+            <div class="actions">
+              <button class="play" type="button">Play in browser</button>
+              <esp-web-install-button manifest="firmware/zakky-gun.json">
+                <button slot="activate" class="install">Install</button>
+                <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
+                <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+              </esp-web-install-button>
+              <a class="dl" href="firmware/zakky-gun.bin" download>.bin</a>
+            </div>
           </div>
-        </article>
-        <article class="card">
-          <h3>Zakky Pixel + Zakky Gun</h3>
-          <p class="blurb">Both games on one install. On the menu: tap for Zakky Pixel, hold for Zakky Gun.</p>
-          <p class="pins">Button: GPIO20</p>
-          <div class="actions">
-            <esp-web-install-button manifest="firmware/zakky-pixel-gun.json">
-              <button slot="activate" class="install">Install</button>
-              <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
-              <span slot="not-allowed" class="warn">Open this page over https to install.</span>
-            </esp-web-install-button>
-            <a class="dl" href="firmware/zakky-pixel-gun.bin" download>.bin</a>
+        </div></div>
+      </article>
+      <article class="game" data-buttons="1" data-slug="zakky-pixel-gun">
+        <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-pixel-gun">
+          <span class="thumb"><img src="assets/shots/zakky-pixel-title.png" alt="" loading="lazy"></span>
+          <span class="row-text"><span class="name">Zakky Pixel + Zakky Gun</span><span class="row-blurb">Both games on one install. On the menu: tap for Zakky Pixel, hold for Zakky Gun.</span></span>
+          <span class="tag">ZB-1</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="detail" id="d-zakky-pixel-gun"><div class="detail-inner">
+          <div class="stage"><div class="screen"><img class="shot shot-title" src="assets/shots/zakky-pixel-title.png" alt="Zakky Pixel + Zakky Gun: title screen" loading="lazy"><img class="shot shot-play" src="assets/shots/zakky-pixel-play.png" alt="Zakky Pixel + Zakky Gun: gameplay" loading="lazy"></div></div>
+          <div class="info">
+            <p class="blurb">Both games on one install. On the menu: tap for Zakky Pixel, hold for Zakky Gun.</p>
+            <p class="pins">1 button · Button: GPIO20</p>
+            <p class="keys">Try Zakky Pixel and Zakky Gun on their own entries to play them in the browser.</p>
+            <div class="actions">
+              
+              <esp-web-install-button manifest="firmware/zakky-pixel-gun.json">
+                <button slot="activate" class="install">Install</button>
+                <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
+                <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+              </esp-web-install-button>
+              <a class="dl" href="firmware/zakky-pixel-gun.bin" download>.bin</a>
+            </div>
           </div>
-        </article>
-        <article class="card">
-          <h3>Gravity Tunnel</h3>
-          <p class="blurb">One-button tunnel game. Zakky Gun grew out of it.</p>
-          <p class="pins">Button: GPIO20</p>
-          <div class="actions">
-            <esp-web-install-button manifest="firmware/gravity-tunnel.json">
-              <button slot="activate" class="install">Install</button>
-              <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
-              <span slot="not-allowed" class="warn">Open this page over https to install.</span>
-            </esp-web-install-button>
-            <a class="dl" href="firmware/gravity-tunnel.bin" download>.bin</a>
+        </div></div>
+      </article>
+      <article class="game" data-buttons="1" data-slug="gravity-tunnel" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
+        <button class="row" type="button" aria-expanded="false" aria-controls="d-gravity-tunnel">
+          <span class="thumb"><img src="assets/shots/gravity-tunnel-title.png" alt="" loading="lazy"></span>
+          <span class="row-text"><span class="name">Gravity Tunnel</span><span class="row-blurb">One-button tunnel game. Zakky Gun grew out of it.</span></span>
+          <span class="tag">ZB-1</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="detail" id="d-gravity-tunnel"><div class="detail-inner">
+          <div class="stage"><div class="screen"><img class="shot shot-title" src="assets/shots/gravity-tunnel-title.png" alt="Gravity Tunnel: title screen" loading="lazy"><img class="shot shot-play" src="assets/shots/gravity-tunnel-play.png" alt="Gravity Tunnel: gameplay" loading="lazy"></div></div>
+          <div class="info">
+            <p class="blurb">One-button tunnel game. Zakky Gun grew out of it.</p>
+            <p class="pins">1 button · Button: GPIO20</p>
+            <p class="keys">Keyboard: Space = A</p>
+            <div class="actions">
+              <button class="play" type="button">Play in browser</button>
+              <esp-web-install-button manifest="firmware/gravity-tunnel.json">
+                <button slot="activate" class="install">Install</button>
+                <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
+                <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+              </esp-web-install-button>
+              <a class="dl" href="firmware/gravity-tunnel.bin" download>.bin</a>
+            </div>
           </div>
-        </article>
-      </div>
-    </section>
-    <section class="group">
-      <div class="group-head">
-        <h2>2 buttons</h2>
-        <span class="tag">ZB-2</span>
-        <span class="count">2 games</span>
-      </div>
-      <div class="grid">
-        <article class="card">
-          <h3>Zakky Dungeon</h3>
-          <p class="blurb">Card dungeon: fight monsters, drink potions and pick up weapons from a deck.</p>
-          <p class="pins">A (cycle): GPIO3 · B (confirm): GPIO20</p>
-          <div class="actions">
-            <esp-web-install-button manifest="firmware/zakky-dungeon.json">
-              <button slot="activate" class="install">Install</button>
-              <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
-              <span slot="not-allowed" class="warn">Open this page over https to install.</span>
-            </esp-web-install-button>
-            <a class="dl" href="firmware/zakky-dungeon.bin" download>.bin</a>
+        </div></div>
+      </article>
+      <article class="game" data-buttons="2" data-slug="zakky-dungeon">
+        <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-dungeon">
+          <span class="thumb"><img src="assets/shots/zakky-dungeon-title.png" alt="" loading="lazy"></span>
+          <span class="row-text"><span class="name">Zakky Dungeon</span><span class="row-blurb">Card dungeon: fight monsters, drink potions and pick up weapons from a deck.</span></span>
+          <span class="tag">ZB-2</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="detail" id="d-zakky-dungeon"><div class="detail-inner">
+          <div class="stage"><div class="screen"><img class="shot shot-title" src="assets/shots/zakky-dungeon-title.png" alt="Zakky Dungeon: title screen" loading="lazy"></div></div>
+          <div class="info">
+            <p class="blurb">Card dungeon: fight monsters, drink potions and pick up weapons from a deck.</p>
+            <p class="pins">2 buttons · A (cycle): GPIO3 · B (confirm): GPIO20</p>
+            <p class="keys">Not playable in the browser yet. Install it to play.</p>
+            <div class="actions">
+              
+              <esp-web-install-button manifest="firmware/zakky-dungeon.json">
+                <button slot="activate" class="install">Install</button>
+                <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
+                <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+              </esp-web-install-button>
+              <a class="dl" href="firmware/zakky-dungeon.bin" download>.bin</a>
+            </div>
           </div>
-        </article>
-        <article class="card">
-          <h3>Zakky Drift</h3>
-          <p class="blurb">Drift racer. One button steers left, the other right.</p>
-          <p class="pins">A (confirm / right): GPIO20 · B (cycle / left): GPIO3</p>
-          <div class="actions">
-            <esp-web-install-button manifest="firmware/zakky-drift.json">
-              <button slot="activate" class="install">Install</button>
-              <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
-              <span slot="not-allowed" class="warn">Open this page over https to install.</span>
-            </esp-web-install-button>
-            <a class="dl" href="firmware/zakky-drift.bin" download>.bin</a>
+        </div></div>
+      </article>
+      <article class="game" data-buttons="2" data-slug="zakky-drift" data-play="[{&quot;label&quot;: &quot;B&quot;, &quot;sub&quot;: &quot;left&quot;, &quot;key&quot;: &quot;s&quot;, &quot;code&quot;: &quot;KeyS&quot;, &quot;hint&quot;: &quot;S&quot;}, {&quot;label&quot;: &quot;A&quot;, &quot;sub&quot;: &quot;right&quot;, &quot;key&quot;: &quot;a&quot;, &quot;code&quot;: &quot;KeyA&quot;, &quot;hint&quot;: &quot;A&quot;}]">
+        <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-drift">
+          <span class="thumb"><img src="assets/shots/zakky-drift-title.png" alt="" loading="lazy"></span>
+          <span class="row-text"><span class="name">Zakky Drift</span><span class="row-blurb">Drift racer. One button steers left, the other right.</span></span>
+          <span class="tag">ZB-2</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="detail" id="d-zakky-drift"><div class="detail-inner">
+          <div class="stage"><div class="screen"><img class="shot shot-title" src="assets/shots/zakky-drift-title.png" alt="Zakky Drift: title screen" loading="lazy"><img class="shot shot-play" src="assets/shots/zakky-drift-play.png" alt="Zakky Drift: gameplay" loading="lazy"></div></div>
+          <div class="info">
+            <p class="blurb">Drift racer. One button steers left, the other right.</p>
+            <p class="pins">2 buttons · A (confirm / right): GPIO20 · B (cycle / left): GPIO3</p>
+            <p class="keys">Keyboard: S = B (left) · A = A (right)</p>
+            <div class="actions">
+              <button class="play" type="button">Play in browser</button>
+              <esp-web-install-button manifest="firmware/zakky-drift.json">
+                <button slot="activate" class="install">Install</button>
+                <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
+                <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+              </esp-web-install-button>
+              <a class="dl" href="firmware/zakky-drift.bin" download>.bin</a>
+            </div>
           </div>
-        </article>
-      </div>
-    </section>
-    <section class="group">
-      <div class="group-head">
-        <h2>6 buttons</h2>
-        <span class="tag">ZB-6</span>
-        <span class="count">1 game</span>
-      </div>
-      <div class="grid">
-        <article class="card">
-          <h3>Blocks</h3>
-          <p class="blurb">Falling blocks, played with the console held upright. Built for an SH1106 screen rather than the usual SSD1306.</p>
-          <p class="pins">A 21 · B 20 · Up 4 · Down 2 · Left 5 · Right 3 · screen SDA 6, SCL 7</p>
-          <div class="actions">
-            <esp-web-install-button manifest="firmware/tetris.json">
-              <button slot="activate" class="install">Install</button>
-              <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
-              <span slot="not-allowed" class="warn">Open this page over https to install.</span>
-            </esp-web-install-button>
-            <a class="dl" href="firmware/tetris.bin" download>.bin</a>
+        </div></div>
+      </article>
+      <article class="game" data-buttons="6" data-slug="tetris" data-play="[{&quot;label&quot;: &quot;◀&quot;, &quot;sub&quot;: &quot;move&quot;, &quot;key&quot;: &quot;ArrowLeft&quot;, &quot;code&quot;: &quot;ArrowLeft&quot;, &quot;hint&quot;: &quot;←&quot;}, {&quot;label&quot;: &quot;▶&quot;, &quot;sub&quot;: &quot;move&quot;, &quot;key&quot;: &quot;ArrowRight&quot;, &quot;code&quot;: &quot;ArrowRight&quot;, &quot;hint&quot;: &quot;→&quot;}, {&quot;label&quot;: &quot;↻&quot;, &quot;sub&quot;: &quot;rotate&quot;, &quot;key&quot;: &quot;ArrowDown&quot;, &quot;code&quot;: &quot;ArrowDown&quot;, &quot;hint&quot;: &quot;↓&quot;}, {&quot;label&quot;: &quot;▼&quot;, &quot;sub&quot;: &quot;drop&quot;, &quot;key&quot;: &quot;ArrowUp&quot;, &quot;code&quot;: &quot;ArrowUp&quot;, &quot;hint&quot;: &quot;↑&quot;}]">
+        <button class="row" type="button" aria-expanded="false" aria-controls="d-tetris">
+          <span class="thumb portrait"><img src="assets/shots/tetris-title.png" alt="" loading="lazy"></span>
+          <span class="row-text"><span class="name">Blocks</span><span class="row-blurb">Falling blocks, played with the console held upright. Built for an SH1106 screen rather than the usual SSD1306.</span></span>
+          <span class="tag">ZB-6</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="detail" id="d-tetris"><div class="detail-inner">
+          <div class="stage portrait"><div class="screen"><img class="shot shot-title" src="assets/shots/tetris-title.png" alt="Blocks: title screen" loading="lazy"><img class="shot shot-play" src="assets/shots/tetris-play.png" alt="Blocks: gameplay" loading="lazy"></div></div>
+          <div class="info">
+            <p class="blurb">Falling blocks, played with the console held upright. Built for an SH1106 screen rather than the usual SSD1306.</p>
+            <p class="pins">6 buttons · A 21 · B 20 · Up 4 · Down 2 · Left 5 · Right 3 · screen SDA 6, SCL 7</p>
+            <p class="keys">Keyboard: ← move · → move · ↓ rotate · ↑ drop</p>
+            <div class="actions">
+              <button class="play" type="button">Play in browser</button>
+              <esp-web-install-button manifest="firmware/tetris.json">
+                <button slot="activate" class="install">Install</button>
+                <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
+                <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+              </esp-web-install-button>
+              <a class="dl" href="firmware/tetris.bin" download>.bin</a>
+            </div>
           </div>
-        </article>
-      </div>
-    </section>
-    <section class="group">
-      <div class="group-head">
-        <h2>7 buttons</h2>
-        <span class="tag">ZB-7</span>
-        <span class="count">1 game</span>
-      </div>
-      <div class="grid">
-        <article class="card">
-          <h3>Jake&#x27;s Quest</h3>
-          <p class="blurb">Roguelike in the spirit of Binding of Isaac: move, shoot and bomb your way through.</p>
-          <p class="pins">Up 9 · Down 5 · Left 6 · Right 8 · A 1 · B 0 · Start 2 (finds the screen by itself)</p>
-          <div class="actions">
-            <esp-web-install-button manifest="firmware/jakes-quest.json">
-              <button slot="activate" class="install">Install</button>
-              <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
-              <span slot="not-allowed" class="warn">Open this page over https to install.</span>
-            </esp-web-install-button>
-            <a class="dl" href="firmware/jakes-quest.bin" download>.bin</a>
+        </div></div>
+      </article>
+      <article class="game" data-buttons="7" data-slug="jakes-quest" data-play="[{&quot;label&quot;: &quot;▲&quot;, &quot;key&quot;: &quot;ArrowUp&quot;, &quot;code&quot;: &quot;ArrowUp&quot;, &quot;hint&quot;: &quot;↑&quot;, &quot;pad&quot;: &quot;up&quot;}, {&quot;label&quot;: &quot;◀&quot;, &quot;key&quot;: &quot;ArrowLeft&quot;, &quot;code&quot;: &quot;ArrowLeft&quot;, &quot;hint&quot;: &quot;←&quot;, &quot;pad&quot;: &quot;left&quot;}, {&quot;label&quot;: &quot;▶&quot;, &quot;key&quot;: &quot;ArrowRight&quot;, &quot;code&quot;: &quot;ArrowRight&quot;, &quot;hint&quot;: &quot;→&quot;, &quot;pad&quot;: &quot;right&quot;}, {&quot;label&quot;: &quot;▼&quot;, &quot;key&quot;: &quot;ArrowDown&quot;, &quot;code&quot;: &quot;ArrowDown&quot;, &quot;hint&quot;: &quot;↓&quot;, &quot;pad&quot;: &quot;down&quot;}, {&quot;label&quot;: &quot;Start&quot;, &quot;key&quot;: &quot;Enter&quot;, &quot;code&quot;: &quot;Enter&quot;, &quot;hint&quot;: &quot;Enter&quot;}, {&quot;label&quot;: &quot;B&quot;, &quot;key&quot;: &quot;x&quot;, &quot;code&quot;: &quot;KeyX&quot;, &quot;hint&quot;: &quot;X&quot;}, {&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot;z&quot;, &quot;code&quot;: &quot;KeyZ&quot;, &quot;hint&quot;: &quot;Z&quot;}]">
+        <button class="row" type="button" aria-expanded="false" aria-controls="d-jakes-quest">
+          <span class="thumb"><img src="assets/shots/jakes-quest-title.png" alt="" loading="lazy"></span>
+          <span class="row-text"><span class="name">Jake&#x27;s Quest</span><span class="row-blurb">Roguelike in the spirit of Binding of Isaac: move, shoot and bomb your way through.</span></span>
+          <span class="tag">ZB-7</span>
+          <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="detail" id="d-jakes-quest"><div class="detail-inner">
+          <div class="stage"><div class="screen"><img class="shot shot-title" src="assets/shots/jakes-quest-title.png" alt="Jake&#x27;s Quest: title screen" loading="lazy"><img class="shot shot-play" src="assets/shots/jakes-quest-play.png" alt="Jake&#x27;s Quest: gameplay" loading="lazy"></div></div>
+          <div class="info">
+            <p class="blurb">Roguelike in the spirit of Binding of Isaac: move, shoot and bomb your way through.</p>
+            <p class="pins">7 buttons · Up 9 · Down 5 · Left 6 · Right 8 · A 1 · B 0 · Start 2 (finds the screen by itself)</p>
+            <p class="keys">Keyboard: Arrow keys = D-pad · Enter = Start · X = B · Z = A</p>
+            <div class="actions">
+              <button class="play" type="button">Play in browser</button>
+              <esp-web-install-button manifest="firmware/jakes-quest.json">
+                <button slot="activate" class="install">Install</button>
+                <span slot="unsupported" class="warn">Open in Chrome or Edge on a computer to install.</span>
+                <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+              </esp-web-install-button>
+              <a class="dl" href="firmware/jakes-quest.bin" download>.bin</a>
+            </div>
           </div>
-        </article>
-      </div>
-    </section>
+        </div></div>
+      </article>
+  </section>
 
   <div class="help">
     <div><h4>No port in the list?</h4><p>Try another cable (some only charge). Or hold <b>BOOT</b> on the board while plugging in, then click Install again.</p></div>
@@ -234,5 +346,97 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
   </div>
   <footer>ZAKKYBOY · 313</footer>
 </div>
+<script>
+// Filter, slide-open rows, and play-in-browser. Each game runs in an iframe (play/<slug>.html);
+// the on-screen buttons and the keyboard send key presses into it.
+const games = [...document.querySelectorAll('.game')];
+
+document.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
+  document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c === chip));
+  const f = chip.dataset.filter;
+  games.forEach(g => { g.hidden = f !== 'all' && g.dataset.buttons !== f; });
+  if (playing && playing.game.hidden) stop();
+}));
+
+games.forEach(g => g.querySelector('.row').addEventListener('click', () => {
+  const open = !g.classList.contains('open');
+  g.classList.toggle('open', open);
+  g.querySelector('.row').setAttribute('aria-expanded', open);
+  if (!open && playing && playing.game === g) stop();
+}));
+
+let playing = null; // { game, frame, controls, screenHTML }
+
+function send(ctrl, down) {
+  if (!playing) return;
+  const w = playing.frame.contentWindow;
+  if (!w || !w.document) return;
+  w.document.dispatchEvent(new w.KeyboardEvent(down ? 'keydown' : 'keyup', { key: ctrl.key, code: ctrl.code, bubbles: true, cancelable: true }));
+  const btn = playing.game.querySelector(`.pad button[data-i="${playing.controls.indexOf(ctrl)}"]`);
+  if (btn) btn.classList.toggle('on', down);
+}
+
+function stop() {
+  if (!playing) return;
+  const { game, screenHTML } = playing;
+  game.querySelector('.screen').innerHTML = screenHTML;
+  game.querySelector('.pad')?.remove();
+  game.querySelector('.stop')?.remove();
+  game.querySelector('.play').hidden = false;
+  playing = null;
+}
+
+function play(g) {
+  stop();
+  const controls = JSON.parse(g.dataset.play);
+  const screen = g.querySelector('.screen');
+  const screenHTML = screen.innerHTML;
+  const frame = document.createElement('iframe');
+  frame.src = `play/${g.dataset.slug}.html`;
+  frame.title = g.querySelector('.name').textContent;
+  screen.innerHTML = '';
+  screen.appendChild(frame);
+  frame.addEventListener('load', () => frame.focus());
+
+  const pad = document.createElement('div');
+  pad.className = 'pad';
+  const dpad = controls.some(c => c.pad) ? Object.assign(document.createElement('div'), { className: 'dpad' }) : null;
+  if (dpad) pad.appendChild(dpad);
+  controls.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.i = i;
+    if (c.pad) b.dataset.pad = c.pad;
+    b.setAttribute('aria-label', c.sub ? `${c.label} (${c.sub})` : c.label);
+    b.innerHTML = c.label + (c.sub ? `<small>${c.sub}</small>` : '');
+    const up = () => send(c, false);
+    b.addEventListener('pointerdown', e => { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (_) {} send(c, true); });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => b.addEventListener(ev, up));
+    (c.pad ? dpad : pad).appendChild(b);
+  });
+  const stopBtn = Object.assign(document.createElement('button'), { type: 'button', className: 'stop', textContent: 'Stop playing' });
+  stopBtn.addEventListener('click', stop);
+  g.querySelector('.stage').append(pad, stopBtn);
+  g.querySelector('.play').hidden = true;
+  playing = { game: g, frame, controls, screenHTML };
+}
+
+games.forEach(g => g.querySelector('.play')?.addEventListener('click', () => play(g)));
+
+// Keys pressed on the main page (not inside the game) are passed to the game that's playing
+const held = new Set();
+addEventListener('keydown', e => {
+  if (!playing) return;
+  const c = playing.controls.find(c => c.code === e.code);
+  if (!c) return;
+  e.preventDefault();
+  if (!held.has(e.code)) { held.add(e.code); send(c, true); }
+});
+addEventListener('keyup', e => {
+  if (!playing) return;
+  const c = playing.controls.find(c => c.code === e.code);
+  if (c) { held.delete(e.code); send(c, false); }
+});
+</script>
 </body>
 </html>

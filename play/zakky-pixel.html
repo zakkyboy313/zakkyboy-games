@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HELI</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body {
+    width:100%; height:100%;
+    background:#000;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    font-family:'Courier New',monospace;
+    overflow:hidden; touch-action:none; color:#fff;
+  }
+  .label { font-size:9px; letter-spacing:0.25em; color:#222; margin-bottom:6px; }
+  .frame { position:relative; background:#000; border:1px solid #1e1e1e; border-radius:4px; padding:5px; }
+  canvas { display:block; image-rendering:pixelated; image-rendering:crisp-edges; }
+  .overlay {
+    position:absolute; inset:5px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.88); border-radius:2px;
+    pointer-events:none;
+  }
+  .ot { font-size:12px; letter-spacing:0.45em; color:#fff; margin-bottom:4px; }
+  .os { font-size:8px; letter-spacing:0.2em; color:#3a3a3a; }
+  .hud { display:flex; gap:22px; margin-top:9px; font-size:10px; letter-spacing:0.15em; color:#252525; }
+  .hud b { color:#aaa; }
+  .btn {
+    margin-top:16px; width:92px; height:92px; border-radius:50%;
+    background:#0c0c0c; border:1px solid #1e1e1e; color:#2a2a2a;
+    font-family:'Courier New',monospace; font-size:9px; letter-spacing:0.15em;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:4px; user-select:none; -webkit-user-select:none;
+  }
+  .btn .ico { font-size:22px; color:#222; line-height:1; }
+  .btn.pressed { background:#161616; border-color:#333; }
+  .btn.pressed .ico { color:#666; }
+  .hint { margin-top:9px; font-size:8px; color:#181818; letter-spacing:0.12em; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="label">128 × 64 OLED</div>
+<div class="frame">
+  <canvas id="c" width="128" height="64"></canvas>
+  <div class="overlay" id="ov">
+    <div class="ot" id="ot">CHOPPY NEEK</div>
+    <div class="os" id="os">HOLD TO FLY</div>
+  </div>
+</div>
+<div class="hud">
+  <span>DIST <b id="sc">0</b></span>
+  <span>BEST <b id="hi">0</b></span>
+</div>
+<button class="btn" id="btn">
+  <span class="ico">▲</span>
+  <span>HOLD</span>
+</button>
+<div class="hint">HOLD = RISE · RELEASE = FALL</div>
+
+<script>
+// ── Canvas setup ──────────────────────────────────────
+const CV  = document.getElementById('c');
+const ctx = CV.getContext('2d');
+const W = 128, H = 64;
+
+function resize() {
+  const s = Math.max(2, Math.floor((window.innerWidth - 16) / W));
+  CV.style.width  = (W * s) + 'px';
+  CV.style.height = (H * s) + 'px';
+}
+resize();
+window.addEventListener('resize', resize);
+
+const ovEl = document.getElementById('ov');
+const otEl = document.getElementById('ot');
+const osEl = document.getElementById('os');
+const scEl = document.getElementById('sc');
+const hiEl = document.getElementById('hi');
+const btnEl = document.getElementById('btn');
+
+// ── Constants ─────────────────────────────────────────
+const GRAVITY  = 0.05;
+const THRUST   = -0.09;
+const MAX_VY   = 1.5;
+const HELI_X   = 14;
+const HELI_W   = 4;
+const HELI_H   = 3;
+const SCROLL   = 0.8;
+const CAVE_BUF = 512;
+const MIN_GAP  = 16;
+const MAX_GAP  = 30;
+
+// ── Bitmap font ───────────────────────────────────────
+// 3x5 pixel digits
+const DIGITS = [
+  [0b111,0b101,0b101,0b101,0b111], // 0
+  [0b010,0b110,0b010,0b010,0b111], // 1
+  [0b111,0b001,0b111,0b100,0b111], // 2
+  [0b111,0b001,0b111,0b001,0b111], // 3
+  [0b101,0b101,0b111,0b001,0b001], // 4
+  [0b111,0b100,0b111,0b001,0b111], // 5
+  [0b111,0b100,0b111,0b101,0b111], // 6
+  [0b111,0b001,0b001,0b001,0b001], // 7
+  [0b111,0b101,0b111,0b101,0b111], // 8
+  [0b111,0b101,0b111,0b001,0b111], // 9
+];
+
+// 3x5 pixel letters
+const LETTERS = {
+  'A': [0b010,0b101,0b111,0b101,0b101],
+  'C': [0b111,0b100,0b100,0b100,0b111],
+  'D': [0b110,0b101,0b101,0b101,0b110],
+  'E': [0b111,0b100,0b111,0b100,0b111],
+  'H': [0b101,0b101,0b111,0b101,0b101],
+  'I': [0b111,0b010,0b010,0b010,0b111],
+  'K': [0b101,0b101,0b110,0b101,0b101],
+  'L': [0b100,0b100,0b100,0b100,0b111],
+  'N': [0b101,0b111,0b111,0b101,0b101],
+  'O': [0b111,0b101,0b101,0b101,0b111],
+  'P': [0b111,0b101,0b111,0b100,0b100],
+  'S': [0b111,0b100,0b111,0b001,0b111],
+  'T': [0b111,0b010,0b010,0b010,0b010],
+  'X': [0b101,0b101,0b010,0b101,0b101],
+  'Y': [0b101,0b101,0b010,0b010,0b010],
+  'Z': [0b111,0b001,0b010,0b100,0b111],
+};
+
+function drawGlyph(bitmap, ox, oy, col) {
+  ctx.fillStyle = col;
+  for (let row = 0; row < 5; row++) {
+    for (let c = 0; c < 3; c++) {
+      if (bitmap[row] & (0b100 >> c)) {
+        ctx.fillRect(ox + c, oy + row, 1, 1);
+      }
+    }
+  }
+}
+
+function drawNum(num, ox, oy) {
+  const str = String(num);
+  const cw  = 4;
+  const bw  = str.length * cw + 2;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(ox - 1, oy - 1, bw, 7);
+  for (let i = 0; i < str.length; i++) {
+    drawGlyph(DIGITS[parseInt(str[i])], ox + i * cw, oy, '#000');
+  }
+}
+
+function drawText(str, ox, oy) {
+  const cw = 4;
+  const bw = str.length * cw + 2;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(ox - 1, oy - 1, bw, 7);
+  for (let i = 0; i < str.length; i++) {
+    const g = LETTERS[str[i]];
+    if (g) drawGlyph(g, ox + i * cw, oy, '#000');
+  }
+}
+
+function drawLabel(label, num, ox, oy) {
+  drawText(label, ox, oy);
+  drawNum(num, ox + label.length * 4 + 3, oy);
+}
+
+// ── Cave generation ───────────────────────────────────
+// Cycle per 200 distance units: 0-100 normal tunnel, 100-200 boss biome
+// First 50 units: intro (wide -> tunnel)
+// Boss biome alternates each cycle: 'rocks' or 'grid'
+// Grid biome = right-angle duct: flat walls that snap vertically at intervals
+
+let ceilBuf  = new Float32Array(CAVE_BUF);
+let floorBuf = new Float32Array(CAVE_BUF);
+let genX, ceilY, floorY, ceilV, floorV;
+
+// Grid duct state — set when boss starts
+let gridDuctCeil  = 10;
+let gridDuctFloor = H - 10;
+let gridNextSnap  = 0; // world-x of next snap point
+
+const GRID_GAP = 22; // wider than normal tunnel so corners are navigable
+
+function snapGridDuct(wx) {
+  // Pick a new flat corridor position, snapping every 60-100px
+  const mid    = 4 + Math.random() * (H - 8 - GRID_GAP);
+  gridDuctCeil  = Math.round(mid);
+  gridDuctFloor = Math.round(mid + GRID_GAP);
+  gridNextSnap  = wx + 60 + Math.floor(Math.random() * 40);
+}
+
+function targetGapAt(wx) {
+  const d     = wx / 10;
+  const cycle = d % 200;
+
+  if (d < 50) {
+    const t = d / 50;
+    return H - 4 - (H - 4 - MAX_GAP) * t;
+  } else if (cycle < 100) {
+    return Math.max(MIN_GAP, MAX_GAP - Math.floor(d / 300));
+  } else {
+    // Boss open phase: ease to full width over first 20 units
+    const bossT = Math.min((cycle - 100) / 20, 1.0);
+    const ease  = bossT < 0.5 ? 2 * bossT * bossT : 1 - Math.pow(-2 * bossT + 2, 2) / 2;
+    const tunnelGap = Math.max(MIN_GAP, MAX_GAP - Math.floor(d / 300));
+    return tunnelGap + (H - 6 - tunnelGap) * ease;
+  }
+}
+
+function resetCave() {
+  ceilY  = 0;
+  floorY = H;
+  ceilV  = 0;
+  floorV = 0;
+  for (let i = 0; i < CAVE_BUF; i++) {
+    ceilBuf[i]  = 0;
+    floorBuf[i] = H;
+  }
+  genX = 0;
+}
+
+function generateCol(wx) {
+  const idx   = wx % CAVE_BUF;
+  const d     = wx / 10;
+  const cycle = d % 200;
+  const inBoss = d >= 50 && cycle >= 100;
+
+  if (inBoss && bossType === 'grid') {
+    // Right-angle duct: flat walls that snap to a new position at intervals
+    if (wx >= gridNextSnap) snapGridDuct(wx);
+    ceilBuf[idx]  = gridDuctCeil;
+    floorBuf[idx] = gridDuctFloor;
+    // Update ceilY/floorY so endBoss can hand off smoothly
+    ceilY  = gridDuctCeil;
+    floorY = gridDuctFloor;
+    return;
+  }
+
+  // Normal cave / rocks boss (open cave)
+  const gap = targetGapAt(wx);
+
+  ceilV  += (Math.random() - 0.48) * 0.3;
+  ceilV   = Math.max(-0.5, Math.min(0.5, ceilV));
+  ceilY  += ceilV;
+  floorV += (Math.random() - 0.52) * 0.3;
+  floorV  = Math.max(-0.5, Math.min(0.5, floorV));
+  floorY += floorV;
+
+  if (floorY - ceilY < gap) {
+    const m = (ceilY + floorY) / 2;
+    ceilY  = m - gap / 2;
+    floorY = m + gap / 2;
+  }
+  ceilY  = Math.max(0, Math.min(H - gap, ceilY));
+  floorY = Math.min(H,  Math.max(ceilY + gap, floorY));
+
+  ceilBuf[idx]  = ceilY;
+  floorBuf[idx] = floorY;
+}
+
+function ensureGenerated(upTo) {
+  while (genX <= upTo) {
+    generateCol(genX);
+    genX++;
+  }
+}
+
+// ── Game state ────────────────────────────────────────
+let vy, heliY, scrollX, distance;
+let hiScore   = 0;
+let lastScore = -1;
+let held      = false;
+let speed, frame;
+let inputLocked = false;
+
+// STATE: 'title' | 'playing' | 'dead'
+let state = 'title';
+
+// ── Boss stage ────────────────────────────────────────
+const BOSS_TRIGGER  = 100;
+const BOSS_DURATION = 100;
+
+let bossActive   = false;
+let bossType     = 'rocks'; // 'rocks' or 'grid'
+let rocks        = [];
+
+// ── Rock generation ───────────────────────────────────
+function makeRock(x) {
+  const cy = 8 + Math.random() * (H - 16);
+  const bw = 4 + Math.floor(Math.random() * 3);
+  const bh = 3 + Math.floor(Math.random() * 3);
+  const bumps = [
+    { dx: -2, dy: -2, w: bw - 2, h: 3 },
+    { dx:  1, dy:  bh - 1, w: bw - 3, h: 3 },
+    { dx: -3, dy:  1, w: 3, h: bh - 2 },
+    { dx:  bw - 1, dy: 0, w: 3, h: bh - 3 },
+  ].filter(() => Math.random() > 0.3);
+  return { x, y: cy - bh / 2, w: bw, h: bh, bumps };
+}
+
+// ── Grid piece generation ─────────────────────────────
+// A grid piece is a random right-angle cluster of 2-4 rectangles
+function makeGridPiece(x) {
+  const cy = 6 + Math.random() * (H - 12);
+  const rects = [];
+  const numRects = 2 + Math.floor(Math.random() * 3);
+  // Start with one rect, then attach others at right angles
+  let curX = 0, curY = 0;
+  for (let i = 0; i < numRects; i++) {
+    const w = 3 + Math.floor(Math.random() * 5);
+    const h = 3 + Math.floor(Math.random() * 5);
+    rects.push({ dx: curX, dy: curY, w, h });
+    // Next piece attaches at a right angle — either extend right or down
+    if (Math.random() > 0.5) {
+      curX += w + 1;
+      curY  = Math.floor(Math.random() * 4) - 2;
+    } else {
+      curY += h + 1;
+      curX  = Math.floor(Math.random() * 4) - 2;
+    }
+  }
+  // Measure total bounds for collision
+  const maxW = Math.max(...rects.map(r => r.dx + r.w));
+  const maxH = Math.max(...rects.map(r => r.dy + r.h));
+  return { x, cy, rects, maxW, maxH };
+}
+
+function startBoss() {
+  bossActive = true;
+  bossType   = distance < 200 ? 'grid' : (Math.random() > 0.5 ? 'rocks' : 'grid');
+  rocks      = [];
+
+  if (bossType === 'grid') {
+    // Initialise duct at current tunnel position so transition is smooth
+    gridDuctCeil  = Math.round(ceilY);
+    gridDuctFloor = Math.round(ceilY + GRID_GAP);
+    gridNextSnap  = Math.floor(scrollX) + 80; // first snap after player has entered
+  } else {
+    const bossEndWorld = scrollX + 1000;
+    for (let rx = scrollX + 350; rx < bossEndWorld; rx += 28 + Math.floor(Math.random() * 18)) {
+      rocks.push(makeRock(rx));
+    }
+  }
+}
+
+function endBoss() {
+  bossActive = false;
+  rocks      = [];
+}
+
+function rockCollides(rock) {
+  const corners = [
+    { x: HELI_X,          y: heliY - HELI_H / 2 },
+    { x: HELI_X,          y: heliY + HELI_H / 2 },
+    { x: HELI_X + HELI_W, y: heliY - HELI_H / 2 },
+    { x: HELI_X + HELI_W, y: heliY + HELI_H / 2 },
+  ];
+  // Convert rock to screen space
+  const rx = rock.x - scrollX;
+  for (const p of corners) {
+    // Main body
+    if (p.x >= rx && p.x <= rx + rock.w &&
+        p.y >= rock.y && p.y <= rock.y + rock.h) return true;
+    // Bumps
+    for (const b of rock.bumps) {
+      if (p.x >= rx + b.dx && p.x <= rx + b.dx + b.w &&
+          p.y >= rock.y + b.dy && p.y <= rock.y + b.dy + b.h) return true;
+    }
+  }
+  return false;
+}
+
+function gridCollides(gp) {
+  const corners = [
+    { x: HELI_X,          y: heliY - HELI_H / 2 },
+    { x: HELI_X,          y: heliY + HELI_H / 2 },
+    { x: HELI_X + HELI_W, y: heliY - HELI_H / 2 },
+    { x: HELI_X + HELI_W, y: heliY + HELI_H / 2 },
+  ];
+  const gx = gp.x - scrollX;
+  for (const p of corners) {
+    for (const r of gp.rects) {
+      if (p.x >= gx + r.dx && p.x <= gx + r.dx + r.w &&
+          p.y >= gp.cy + r.dy && p.y <= gp.cy + r.dy + r.h) return true;
+    }
+  }
+  return false;
+}
+
+function startGame() {
+  vy        = 0;
+  heliY     = H / 2;
+  scrollX   = 0;
+  distance  = 0;
+  speed     = SCROLL;
+  frame     = 0;
+  held      = true;
+  state     = 'playing';
+  bossActive = false;
+  rocks      = [];
+  resetCave();
+  ovEl.style.display = 'none';
+}
+
+function showTitle() {
+  state = 'title';
+  ovEl.style.display = 'none';
+}
+
+function showDead() {
+  state = 'dead';
+  inputLocked = true;
+  ovEl.style.display = 'none';
+  setTimeout(() => { inputLocked = false; }, 1000);
+}
+
+// ── Collision ─────────────────────────────────────────
+function checkCollision() {
+  const corners = [
+    { x: HELI_X,          y: heliY - HELI_H / 2 },
+    { x: HELI_X,          y: heliY + HELI_H / 2 },
+    { x: HELI_X + HELI_W, y: heliY - HELI_H / 2 },
+    { x: HELI_X + HELI_W, y: heliY + HELI_H / 2 },
+  ];
+  for (const p of corners) {
+    const idx = Math.floor(scrollX + p.x) % CAVE_BUF;
+    if (p.y <= ceilBuf[idx] || p.y >= floorBuf[idx]) return true;
+  }
+  if (bossActive) {
+    for (const rock of rocks) {
+      if (rockCollides(rock)) return true;
+    }
+  }
+  return false;
+}
+
+// ── Update ────────────────────────────────────────────
+function update() {
+  if (state !== 'playing') return;
+  frame++;
+  speed = Math.min(SCROLL + scrollX * 0.0012, 1.8);
+  vy += held ? THRUST : GRAVITY;
+  vy  = Math.max(-MAX_VY, Math.min(MAX_VY, vy));
+  heliY   += vy;
+  scrollX += speed;
+  distance = Math.floor(scrollX / 10);
+
+  // Boss trigger — every 150 distance units, boss is dist 100-150
+  const cycle = distance % 200;
+  if (!bossActive && cycle >= 100) startBoss();
+  if (bossActive && cycle < 100)   endBoss();
+
+  ensureGenerated(Math.floor(scrollX) + W + 160); // generate well ahead inc boss section
+
+  if (bossActive) {
+    rocks = rocks.filter(r => r.x > scrollX - 20);
+  }
+
+  scEl.textContent = distance;
+
+  if (checkCollision()) {
+    lastScore = distance;
+    if (distance > hiScore) hiScore = distance;
+    hiEl.textContent = hiScore;
+    showDead();
+  }
+}
+
+// ── Draw ──────────────────────────────────────────────
+function draw() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  if (state === 'title') {
+    const title  = 'ZAKKY PIXEL';
+    const scaleX = 2;
+    const scaleY = 6;
+    const cw     = 3 * scaleX + scaleX; // 3px glyph + 1px gap, all scaled
+    const spaceW = 2 * scaleX;          // space char width
+
+    // Measure total width
+    let totalW = 0;
+    for (let i = 0; i < title.length; i++) {
+      totalW += (title[i] === ' ') ? spaceW : cw;
+    }
+    totalW -= scaleX; // no trailing gap
+
+    const tx = Math.floor((W - totalW) / 2);
+    const ty = Math.floor(H / 2) - Math.floor(5 * scaleY / 2);
+
+    // White bg
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(tx - 2, ty - 2, totalW + 4, 5 * scaleY + 4);
+
+    // Draw glyphs
+    ctx.fillStyle = '#000';
+    let cx = tx;
+    for (let i = 0; i < title.length; i++) {
+      const ch = title[i];
+      if (ch === ' ') { cx += spaceW; continue; }
+      const g = LETTERS[ch];
+      if (g) {
+        for (let row = 0; row < 5; row++) {
+          for (let col = 0; col < 3; col++) {
+            if (g[row] & (0b100 >> col)) {
+              ctx.fillRect(cx + col * scaleX, ty + row * scaleY, scaleX, scaleY);
+            }
+          }
+        }
+      }
+      cx += cw;
+    }
+
+    // Scores bottom — LAST on top, HI below
+    if (lastScore >= 0) {
+      drawLabel('LAST', lastScore, 2, H - 16);
+      drawLabel('HI',   hiScore,   2, H - 8);
+    } else {
+      drawLabel('HI', hiScore, 2, H - 8);
+    }
+    return;
+  }
+
+  if (state === 'dead') {
+    // Big last score centred, best score smaller below
+    // Measure lastScore width: each digit = 4px wide
+    const bigScale = 2;
+    const scoreStr = String(lastScore);
+    const bigW = scoreStr.length * 4 * bigScale + (scoreStr.length - 1) * bigScale;
+    const bigX = Math.floor((W - bigW) / 2);
+    const bigY = Math.floor(H / 2) - 10;
+    drawNumScaled(lastScore, bigX, bigY, bigScale);
+
+    // "DEAD" label above score
+    drawText('DEAD', Math.floor((W - 4 * 4 + 2) / 2) - 2, bigY - 9);
+
+    // Best below
+    drawLabel('HI', hiScore, Math.floor((W - (2 * 4 + 3 + String(hiScore).length * 4 + 2)) / 2), bigY + 14);
+    return;
+  }
+
+  // Playing
+  ctx.fillStyle = '#fff';
+  for (let sx = 0; sx < W; sx++) {
+    const idx = (Math.floor(scrollX) + sx) % CAVE_BUF;
+    const c   = Math.floor(ceilBuf[idx]);
+    const f   = Math.floor(floorBuf[idx]);
+    ctx.fillRect(sx, 0, 1, c);
+    ctx.fillRect(sx, f, 1, H - f);
+  }
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(HELI_X, Math.round(heliY) - 2, HELI_W, HELI_H);
+
+  // Draw rocks during rocky section
+  if (bossActive) {
+    ctx.fillStyle = '#fff';
+    for (const rock of rocks) {
+      const rx = Math.round(rock.x - scrollX);
+      if (rx > W || rx + rock.w < 0) continue;
+      ctx.fillRect(rx, Math.round(rock.y), rock.w, rock.h);
+      for (const b of rock.bumps) {
+        ctx.fillRect(rx + b.dx, Math.round(rock.y) + b.dy, b.w, b.h);
+      }
+    }
+  }
+
+  drawNum(distance, 2, 2);
+}
+
+function drawNumScaled(num, ox, oy, scale) {
+  const str = String(num);
+  const cw  = 4 * scale;
+  const bw  = str.length * cw + 2;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(ox - 1, oy - 1, bw, 5 * scale + 2);
+  for (let i = 0; i < str.length; i++) {
+    const d  = DIGITS[parseInt(str[i])];
+    const dx = ox + i * cw;
+    ctx.fillStyle = '#000';
+    for (let row = 0; row < 5; row++) {
+      for (let c = 0; c < 3; c++) {
+        if (d[row] & (0b100 >> c)) {
+          ctx.fillRect(dx + c * scale, oy + row * scale, scale, scale);
+        }
+      }
+    }
+  }
+}
+
+// ── Loop ──────────────────────────────────────────────
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ── Input ─────────────────────────────────────────────
+function press() {
+  held = true;
+  btnEl.classList.add('pressed');
+  if (inputLocked) return;
+  if (state === 'title') {
+    startGame();
+  } else if (state === 'dead') {
+    showTitle();
+  }
+}
+
+function release() {
+  held = false;
+  btnEl.classList.remove('pressed');
+}
+
+btnEl.addEventListener('touchstart',  e => { e.preventDefault(); press(); },   { passive: false });
+btnEl.addEventListener('touchend',    e => { e.preventDefault(); release(); }, { passive: false });
+btnEl.addEventListener('touchcancel', e => { e.preventDefault(); release(); }, { passive: false });
+btnEl.addEventListener('mousedown',   press);
+btnEl.addEventListener('mouseup',     release);
+btnEl.addEventListener('mouseleave',  release);
+
+CV.addEventListener('touchstart', e => { e.preventDefault(); press(); },   { passive: false });
+CV.addEventListener('touchend',   e => { e.preventDefault(); release(); }, { passive: false });
+
+document.addEventListener('keydown', e => { if (e.code === 'Space' && !e.repeat) { e.preventDefault(); press(); } });
+document.addEventListener('keyup',   e => { if (e.code === 'Space') { e.preventDefault(); release(); } });
+
+// ── Boot ──────────────────────────────────────────────
+resetCave();
+scEl.textContent = 0;
+hiEl.textContent = 0;
+showTitle();
+loop();
+</script>
+<!-- Added by tools/release.py to the copy of a game on the public page (site/play/<slug>.html).
+     Shows only the game screen, full size, and hides the prototype's panels and cheats.
+     The page underneath keeps running unchanged; the hidden parts are still there, just not shown. -->
+<style id="zb-play">
+html, body { margin: 0 !important; padding: 0 !important; height: 100% !important; overflow: hidden !important; background: #000 !important; }
+body > :not(#zb-stage) { display: none !important; }
+#zb-stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; }
+#zb-stage > canvas { display: block !important; position: static !important; transform: none !important; margin: 0 !important;
+  border: 0 !important; box-shadow: none !important; width: 100% !important; height: 100% !important;
+  object-fit: contain; image-rendering: pixelated; image-rendering: crisp-edges; }
+</style>
+<script>
+(function () {
+  var c = document.querySelector('#c');
+  if (!c) return;
+  var stage = document.createElement('div');
+  stage.id = 'zb-stage';
+  document.body.appendChild(stage);
+  stage.appendChild(c);
+  // Stop arrow keys and Space scrolling the page this is embedded in
+  addEventListener('keydown', function (e) {
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) >= 0) e.preventDefault();
+  }, { passive: false });
+})();
+</script>
+</body>
+</html>

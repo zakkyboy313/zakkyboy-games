@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OLED Tetris Prototype</title>
+<style>
+  :root {
+    --oled-on: #cfe8ff;
+    --oled-off: #05080d;
+    --case: #1a1d24;
+    --case-edge: #2c313c;
+    --btn: #23272f;
+    --btn-active: #3a4150;
+    --label: #7f8a9c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: #0c0e12;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color: var(--label);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .device {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding: 24px;
+  }
+  .bezel {
+    background: linear-gradient(160deg, var(--case-edge), var(--case));
+    padding: 14px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  /* 128x64 native, rotated to portrait -> 64 wide x 128 tall, scaled up */
+  canvas {
+    display: block;
+    width: 256px;   /* 64 * 4 */
+    height: 512px;  /* 128 * 4 */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: var(--oled-off);
+    border-radius: 4px;
+  }
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 340px;
+  }
+  .btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn button {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid var(--case-edge);
+    background: var(--btn);
+    color: var(--oled-on);
+    border-radius: 50%;
+    font-size: 20px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform .05s, background .05s;
+    box-shadow: 0 4px 0 #12141a;
+  }
+  .btn button:active, .btn button.down {
+    background: var(--btn-active);
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #12141a;
+  }
+  .btn span {
+    font-size: 10px;
+    text-align: center;
+    letter-spacing: .3px;
+    line-height: 1.3;
+    min-height: 26px;
+  }
+  .hint {
+    font-size: 10px;
+    color: #4a5262;
+    text-align: center;
+    max-width: 300px;
+    line-height: 1.5;
+  }
+  .hint b { color: var(--label); font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="device">
+    <div class="bezel">
+      <canvas id="screen" width="64" height="128"></canvas>
+    </div>
+    <div class="controls">
+      <div class="btn"><button data-k="1">⟳</button><span>Rotate</span></div>
+      <div class="btn"><button data-k="2">⤓</button><span>Drop</span></div>
+      <div class="btn"><button data-k="3">◀</button><span>Left</span></div>
+      <div class="btn"><button data-k="4">▶</button><span>Right</span></div>
+    </div>
+    <div class="hint">Keys: <b>1</b> rotate · <b>2</b> drop · <b>3</b> left · <b>4</b> right · <b>any</b> to start/retry</div>
+  </div>
+
+<script>
+const W = 64, H = 128;            // native OLED (portrait)
+const cv = document.getElementById('screen');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+// ---- 1-bit framebuffer ----
+const ON = '#cfe8ff', OFF = '#05080d';
+function clear(){ ctx.fillStyle = OFF; ctx.fillRect(0,0,W,H); }
+function px(x,y){ ctx.fillStyle = ON; ctx.fillRect(x|0, y|0, 1, 1); }
+function rect(x,y,w,h){ ctx.fillStyle = ON; ctx.fillRect(x,y,w,h); }
+function frame(x,y,w,h){ // 1px hollow rectangle
+  rect(x,y,w,1); rect(x,y+h-1,w,1); rect(x,y,1,h); rect(x+w-1,y,1,h);
+}
+
+// ---- tiny 3x5 pixel font ----
+const FONT = {
+  '0':[0b111,0b101,0b101,0b101,0b111],'1':[0b010,0b110,0b010,0b010,0b111],
+  '2':[0b111,0b001,0b111,0b100,0b111],'3':[0b111,0b001,0b111,0b001,0b111],
+  '4':[0b101,0b101,0b111,0b001,0b001],'5':[0b111,0b100,0b111,0b001,0b111],
+  '6':[0b111,0b100,0b111,0b101,0b111],'7':[0b111,0b001,0b010,0b010,0b010],
+  '8':[0b111,0b101,0b111,0b101,0b111],'9':[0b111,0b101,0b111,0b001,0b111],
+  'A':[0b111,0b101,0b111,0b101,0b101],'B':[0b110,0b101,0b110,0b101,0b110],
+  'C':[0b111,0b100,0b100,0b100,0b111],'D':[0b110,0b101,0b101,0b101,0b110],
+  'E':[0b111,0b100,0b110,0b100,0b111],'F':[0b111,0b100,0b110,0b100,0b100],
+  'G':[0b111,0b100,0b101,0b101,0b111],'H':[0b101,0b101,0b111,0b101,0b101],
+  'I':[0b111,0b010,0b010,0b010,0b111],'J':[0b001,0b001,0b001,0b101,0b111],
+  'K':[0b101,0b110,0b100,0b110,0b101],'L':[0b100,0b100,0b100,0b100,0b111],
+  'M':[0b101,0b111,0b111,0b101,0b101],'N':[0b101,0b111,0b111,0b111,0b101],
+  'O':[0b111,0b101,0b101,0b101,0b111],'P':[0b111,0b101,0b111,0b100,0b100],
+  'Q':[0b111,0b101,0b101,0b111,0b011],'R':[0b110,0b101,0b110,0b101,0b101],
+  'S':[0b111,0b100,0b111,0b001,0b111],'T':[0b111,0b010,0b010,0b010,0b010],
+  'U':[0b101,0b101,0b101,0b101,0b111],'V':[0b101,0b101,0b101,0b101,0b010],
+  'W':[0b101,0b101,0b111,0b111,0b101],'X':[0b101,0b101,0b010,0b101,0b101],
+  'Y':[0b101,0b101,0b010,0b010,0b010],'Z':[0b111,0b001,0b010,0b100,0b111],
+  ' ':[0,0,0,0,0],'-':[0,0,0b111,0,0],':':[0,0b010,0,0b010,0],'!':[0b010,0b010,0b010,0,0b010],
+  '.':[0,0,0,0,0b010]
+};
+function glyphW(){ return 4; } // 3px + 1 space
+function text(str, x, y){
+  str = String(str).toUpperCase();
+  let cx = x;
+  for(const ch of str){
+    const g = FONT[ch] || FONT[' '];
+    for(let r=0;r<5;r++){ const row=g[r]; for(let c=0;c<3;c++){ if(row & (1<<(2-c))) px(cx+c, y+r); } }
+    cx += 4;
+  }
+  return cx;
+}
+function textW(str){ return String(str).length*4 - 1; }
+function textCenter(str, y){ text(str, Math.round((W - textW(str))/2), y); }
+
+// ---- board geometry ----
+// Cell = 6px. Playfield 10 wide x 16 tall = 60 x 96. Centered horizontally.
+const CELL = 6, COLS = 10, ROWS = 16;
+const FIELD_W = COLS*CELL, FIELD_H = ROWS*CELL;   // 60 x 96
+const FX = Math.floor((W - FIELD_W)/2);           // 2
+const FY = 30;                                     // taller top HUD strip (score+hold+next)
+
+// ---- tetromino defs (each rotation = list of [x,y] offsets, 0..3) ----
+const SHAPES = {
+  I:[[[0,1],[1,1],[2,1],[3,1]],[[2,0],[2,1],[2,2],[2,3]],[[0,2],[1,2],[2,2],[3,2]],[[1,0],[1,1],[1,2],[1,3]]],
+  O:[[[1,0],[2,0],[1,1],[2,1]]],
+  T:[[[1,0],[0,1],[1,1],[2,1]],[[1,0],[1,1],[2,1],[1,2]],[[0,1],[1,1],[2,1],[1,2]],[[1,0],[0,1],[1,1],[1,2]]],
+  S:[[[1,0],[2,0],[0,1],[1,1]],[[1,0],[1,1],[2,1],[2,2]],[[1,1],[2,1],[0,2],[1,2]],[[0,0],[0,1],[1,1],[1,2]]],
+  Z:[[[0,0],[1,0],[1,1],[2,1]],[[2,0],[1,1],[2,1],[1,2]],[[0,1],[1,1],[1,2],[2,2]],[[1,0],[0,1],[1,1],[0,2]]],
+  J:[[[0,0],[0,1],[1,1],[2,1]],[[1,0],[2,0],[1,1],[1,2]],[[0,1],[1,1],[2,1],[2,2]],[[1,0],[1,1],[0,2],[1,2]]],
+  L:[[[2,0],[0,1],[1,1],[2,1]],[[1,0],[1,1],[1,2],[2,2]],[[0,1],[1,1],[2,1],[0,2]],[[0,0],[1,0],[1,1],[1,2]]]
+};
+const KEYS = Object.keys(SHAPES);
+
+// ---- game state ----
+let state = 'start';       // start | play | over
+let board, cur, queue, score, highscore, newHigh;
+let hold, canHold, combo, lastWasQuad;
+let toastText='', toastTimer=0;
+let flashRows=[], flashTimer=0;        // line-clear effect
+let quadEffect=false, quadParts=[];    // special tetris (4-line) effect
+const QUAD_FRAMES=26;                   // duration of the tetris effect
+let lockTimer=0, lockResets=0;         // lock-delay state
+const LOCK_DELAY=30;                    // frames grounded before locking (~0.5s)
+const MAX_LOCK_RESETS=15;               // cap on rotate/move stalls per landing
+let dropTimer = 0, dropInterval = 32;  // frames per gravity step (~0.53s at 60fps)
+let frameCount = 0;
+
+highscore = parseInt(loadHS() || '0', 10);
+
+function loadHS(){ try { return localStorage.getItem('oledtetris_hs'); } catch(e){ return null; } }
+function saveHS(v){ try { localStorage.setItem('oledtetris_hs', v); } catch(e){} }
+
+function newPiece(type){
+  return { type, rot:0, x:3, y:-1 }; // spawn near top
+}
+function refillQueue(){
+  while(queue.length < 5){
+    // 7-bag
+    if(!refillQueue.bag || refillQueue.bag.length===0){
+      refillQueue.bag = KEYS.slice();
+      for(let i=refillQueue.bag.length-1;i>0;i--){ const j=Math.random()*(i+1)|0; [refillQueue.bag[i],refillQueue.bag[j]]=[refillQueue.bag[j],refillQueue.bag[i]]; }
+    }
+    queue.push(refillQueue.bag.pop());
+  }
+}
+function reset(){
+  board = Array.from({length:ROWS}, ()=>Array(COLS).fill(0));
+  queue = []; refillQueue.bag=null; refillQueue();
+  cur = newPiece(queue.shift()); refillQueue();
+  score = 0; newHigh = false;
+  hold = null; canHold = true; combo = -1; lastWasQuad = false;
+  toastText=''; toastTimer=0; flashRows=[]; flashTimer=0; quadEffect=false; quadParts=[];
+  lockTimer=0; lockResets=0;
+  dropTimer = 0;
+}
+function toast(msg, frames){ toastText=msg; toastTimer=frames; }
+
+function cells(piece){
+  const rots = SHAPES[piece.type];
+  const r = rots[piece.rot % rots.length];
+  return r.map(([ox,oy])=>[piece.x+ox, piece.y+oy]);
+}
+function collides(piece){
+  for(const [x,y] of cells(piece)){
+    if(x<0 || x>=COLS || y>=ROWS) return true;
+    if(y>=0 && board[y][x]) return true;
+  }
+  return false;
+}
+function lock(){
+  for(const [x,y] of cells(cur)){ if(y>=0) board[y][x]=1; }
+  // find full rows
+  const full=[];
+  for(let y=0;y<ROWS;y++) if(board[y].every(v=>v)) full.push(y);
+
+  if(full.length){
+    score += [0,10,25,45,70][full.length];
+    // combo (consecutive clears)
+    combo++;
+    if(combo>0) score += 5*combo;
+
+    const b2b = (full.length===4 && lastWasQuad);
+    if(b2b) score += 20;
+
+    // toast message priority: back-to-back tetris > tetris/triple/double > combo
+    if(full.length===4) toast(b2b ? 'BACK TO\nBACK\nTETRIS' : 'TETRIS', 70);
+    else if(full.length===3) toast('TRIPLE', 55);
+    else if(full.length===2) toast('DOUBLE', 55);
+    else if(combo>0) toast('COMBO '+combo, 45);
+
+    lastWasQuad = (full.length===4);
+
+    if(full.length===4){
+      // special TETRIS effect: capture cells so they can pulse + spin away
+      quadEffect = true;
+      quadParts = [];
+      for(const y of full){
+        for(let x=0;x<COLS;x++){
+          quadParts.push({
+            x0:FX+x*CELL, y0:FY+y*CELL,      // origin (px)
+            dx:(x-(COLS-1)/2),               // horizontal fling direction
+            rot:(Math.random()*2-1)          // spin direction/speed
+          });
+        }
+      }
+      flashRows = full; flashTimer = QUAD_FRAMES;
+    } else {
+      quadEffect = false;
+      flashRows = full; flashTimer = 12;   // normal blink
+    }
+  } else {
+    combo = -1; // broke the combo chain
+    lastWasQuad = false;
+    spawnNext();
+  }
+}
+function resolveClears(){
+  // remove the flashed rows top-to-bottom
+  flashRows.sort((a,b)=>a-b);
+  for(const y of flashRows){ board.splice(y,1); board.unshift(Array(COLS).fill(0)); }
+  flashRows=[]; quadEffect=false; quadParts=[];
+  spawnNext();
+}
+function spawnNext(){
+  cur = newPiece(queue.shift()); refillQueue();
+  canHold = true;
+  lockTimer=0; lockResets=0; dropTimer=0;
+  if(collides(cur)) gameOver();
+}
+function gameOver(){
+  state='over';
+  if(score>highscore){ highscore=score; newHigh=true; saveHS(highscore); }
+}
+
+function step(){
+  frameCount++;
+  if(toastTimer>0) toastTimer--;
+  if(state!=='play') return;
+  // line-clear animation (flash or tetris effect) pauses gravity
+  if(flashTimer>0){ flashTimer--; if(flashTimer===0) resolveClears(); return; }
+
+  const grounded = collides({...cur, y:cur.y+1});
+  if(grounded){
+    // piece is resting on the stack: run the lock-delay countdown instead of
+    // locking instantly. rotate/move reset it (see resetLockDelay), so the
+    // player can keep adjusting. resets are capped so it can't stall forever.
+    lockTimer++;
+    if(lockTimer>=LOCK_DELAY || lockResets>=MAX_LOCK_RESETS) lock();
+  } else {
+    // airborne: normal gravity, and reset the lock state
+    lockTimer=0; lockResets=0;
+    const interval = (leftHeld && rightHeld) ? SOFT_INTERVAL : dropInterval;
+    dropTimer++;
+    if(dropTimer>=interval){ dropTimer=0; softDown(); }
+  }
+}
+function softDown(){
+  const t={...cur, y:cur.y+1};
+  if(collides(t)){ /* now grounded; lock handled by lock-delay in step() */ }
+  else cur=t;
+}
+// called after a successful rotate/move while grounded: grants more time
+function resetLockDelay(){
+  if(collides({...cur, y:cur.y+1}) && lockResets<MAX_LOCK_RESETS){
+    lockTimer=0; lockResets++;
+  }
+}
+
+// ---- input actions ----
+function move(dx){ const t={...cur,x:cur.x+dx}; if(!collides(t)){ cur=t; resetLockDelay(); } }
+function rotate(){
+  const rots=SHAPES[cur.type].length;
+  const t={...cur, rot:(cur.rot+1)%rots};
+  // simple wall kicks
+  for(const k of [0,-1,1,-2,2]){ const tk={...t,x:t.x+k}; if(!collides(tk)){ cur=tk; resetLockDelay(); return; } }
+}
+function hardDrop(){
+  let t={...cur};
+  while(!collides({...t,y:t.y+1})) t.y++;
+  cur=t; lock(); dropTimer=0;
+}
+function holdPiece(){
+  if(!canHold) return;
+  canHold = false;
+  if(hold===null){
+    hold = cur.type;
+    cur = newPiece(queue.shift()); refillQueue();
+  } else {
+    const swap = hold;
+    hold = cur.type;
+    cur = newPiece(swap);
+  }
+  dropTimer = 0; lockTimer=0; lockResets=0;
+  if(collides(cur)) gameOver();
+}
+
+let rotateHeld = false;   // is button 1 currently held?
+let leftHeld = false, rightHeld = false;
+const SOFT_INTERVAL = 5;  // frames per gravity step while soft-dropping (~12x faster)
+
+function handle(k){
+  if(state==='start'){ reset(); state='play'; return; }
+  if(state==='over'){ reset(); state='play'; return; }
+  if(state!=='play') return;
+  if(flashTimer>0) return; // ignore input during line-clear flash
+  if(k==='2'){
+    // hold rotate + press drop = hold/save piece
+    if(rotateHeld) holdPiece();
+    else hardDrop();
+  }
+  else if(k==='1') rotate();
+  else if(k==='3') move(-1);
+  else if(k==='4') move(1);
+}
+
+// ---- rendering ----
+function drawCell(gx, gy){ rect(FX+gx*CELL, FY+gy*CELL, CELL-1, CELL-1); }
+
+function drawPlayScreen(){
+  // ---- HUD (top strip, y 0..28) ----
+  // score, top-left
+  text('S', 1, 1); text(score, 6, 1);
+
+  // HOLD box, below score, top-left. 13x13 box.
+  const HOLD_X=1, HOLD_Y=9, HOLD_S=13;
+  frame(HOLD_X, HOLD_Y, HOLD_S, HOLD_S);
+  if(hold) drawPieceInBox(hold, HOLD_X, HOLD_Y, HOLD_S);
+
+  // NEXT box, right side. Same height as the HOLD box, pieces centered.
+  const NB_X=18, NB_Y=HOLD_Y, NB_W=W-1-NB_X, NB_H=HOLD_S;
+  text('NEXT', W-1-textW('NEXT'), 1);   // right-aligned label, frees space for score
+  frame(NB_X, NB_Y, NB_W, NB_H);
+  const slotW=Math.floor(NB_W/3);
+  for(let i=0;i<3;i++) drawMiniCentered(queue[i], NB_X+i*slotW, NB_Y, slotW, NB_H);
+
+  // ---- field frame ----
+  frame(FX-1, FY-1, FIELD_W+2, FIELD_H+2);
+
+  // locked blocks. Rows being cleared animate; others draw normally.
+  const flashOn = (Math.floor(flashTimer/3)%2===0);
+  for(let y=0;y<ROWS;y++){
+    const flashing = flashRows.includes(y);
+    for(let x=0;x<COLS;x++){
+      if(!board[y][x]) continue;
+      if(flashing){
+        if(quadEffect) continue;      // quad rows drawn separately below
+        if(flashOn) drawCell(x,y);    // normal blink
+      } else {
+        drawCell(x,y);
+      }
+    }
+  }
+
+  // special TETRIS animation: brief bright pulse, then cells spin + fly outward
+  if(quadEffect && flashTimer>0){
+    const t = 1 - flashTimer/QUAD_FRAMES;   // 0 -> 1 over the effect
+    const pulse = t < 0.35;                  // first phase: pulse in place
+    for(const prt of quadParts){
+      if(pulse){
+        // grow/shrink pulse around cell centre
+        const g = Math.sin(t/0.35*Math.PI);      // 0..1..0
+        const s = Math.round(2 + g*3);            // size 2..5
+        const cx = prt.x0 + (CELL-1)/2, cy = prt.y0 + (CELL-1)/2;
+        rect(Math.round(cx-s/2), Math.round(cy-s/2), s, s);
+      } else {
+        // fly-away phase: translate outward + shrink (spin implied by size wobble)
+        const k = (t-0.35)/0.65;                  // 0..1
+        const fx = prt.x0 + prt.dx*k*22;
+        const fy = prt.y0 - k*k*30;               // arc upward
+        const s = Math.max(1, Math.round(3*(1-k)));
+        const spin = Math.abs(Math.sin((t*10+prt.rot*3)))*1.5;
+        rect(Math.round(fx), Math.round(fy), Math.max(1,Math.round(s-spin*0.5)), s);
+      }
+    }
+  }
+
+  if(flashTimer===0){
+    // ghost: single hollow stroke outline of landing position
+    let g={...cur}; while(!collides({...g,y:g.y+1})) g.y++;
+    drawGhostOutline(cells(g));
+    // current piece
+    for(const [x,y] of cells(cur)) if(y>=0) drawCell(x,y);
+  }
+
+  // ---- toast message (over field, near top) ----
+  if(toastTimer>0 && (Math.floor(toastTimer/4)%2===0 || toastTimer<20)){
+    drawToast(toastText);
+  }
+}
+
+// hollow single-stroke outline around a set of cells (the ghost).
+// Build the shape's filled-pixel mask, then draw a pixel wherever a filled
+// pixel touches an empty pixel (or the shape edge). This yields one continuous
+// closed stroke with no gaps at convex OR concave corners.
+function drawGhostOutline(cs){
+  const set = new Set(cs.map(([x,y])=>x+','+y));
+  const has = (gx,gy)=>set.has(gx+','+gy);
+  // pixel-space test: is grid-pixel (px,py) inside the shape's footprint?
+  const inside = (pxl,pyl)=>{
+    const gx=Math.floor((pxl-FX)/CELL), gy=Math.floor((pyl-FY)/CELL);
+    return has(gx,gy);
+  };
+  // bounding pixel box of the whole shape
+  let minx=Infinity,miny=Infinity,maxx=-Infinity,maxy=-Infinity;
+  for(const [x,y] of cs){
+    if(y<0) continue;
+    minx=Math.min(minx,FX+x*CELL); miny=Math.min(miny,FY+y*CELL);
+    maxx=Math.max(maxx,FX+x*CELL+CELL-1); maxy=Math.max(maxy,FY+y*CELL+CELL-1);
+  }
+  if(minx===Infinity) return;
+  for(let p=minx;p<=maxx;p++){
+    for(let q=miny;q<=maxy;q++){
+      if(!inside(p,q)) continue;
+      // edge pixel if any 4-neighbour OR diagonal neighbour is outside the shape
+      if(!inside(p-1,q)||!inside(p+1,q)||!inside(p,q-1)||!inside(p,q+1)||
+         !inside(p-1,q-1)||!inside(p+1,q-1)||!inside(p-1,q+1)||!inside(p+1,q+1)){
+        px(p,q);
+      }
+    }
+  }
+}
+
+function drawToast(str){
+  const lines = str.split('\n');
+  const wmax = Math.max(...lines.map(textW));
+  const boxW = wmax+6, boxH = lines.length*6+5;
+  const bx = Math.round((W-boxW)/2), by = Math.round((H-boxH)/2);  // screen centre
+  ctx.fillStyle=OFF; ctx.fillRect(bx, by, boxW, boxH);
+  frame(bx, by, boxW, boxH);
+  lines.forEach((ln,i)=>{
+    const lx = Math.round((W-textW(ln))/2);
+    text(ln, lx, by+3+i*6);
+  });
+}
+
+// draw a piece centered inside a square box of side S at (ox,oy)
+function drawPieceInBox(type, ox, oy, S){
+  const r=SHAPES[type][0];
+  let minx=9,miny=9,maxx=0,maxy=0;
+  for(const [x,y] of r){ minx=Math.min(minx,x);miny=Math.min(miny,y);maxx=Math.max(maxx,x);maxy=Math.max(maxy,y); }
+  const bw=(maxx-minx+1), bh=(maxy-miny+1), cell=2;
+  const px0=ox+Math.floor((S-bw*cell)/2), py0=oy+Math.floor((S-bh*cell)/2);
+  for(const [x,y] of r){ rect(px0+(x-minx)*cell, py0+(y-miny)*cell, cell, cell); }
+}
+// small preview (inside NEXT box), 2px cells normalized to top-left
+function drawMiniSmall(type, ox, oy){
+  if(!type) return;
+  const r=SHAPES[type][0];
+  let minx=9,miny=9; for(const [x,y] of r){ minx=Math.min(minx,x); miny=Math.min(miny,y); }
+  for(const [x,y] of r){ rect(ox+(x-minx)*2, oy+(y-miny)*2, 1, 1); rect(ox+(x-minx)*2, oy+(y-miny)*2, 2, 2); }
+}
+// preview centered within a slot of width sw / height sh, 2px cells
+function drawMiniCentered(type, ox, oy, sw, sh){
+  if(!type) return;
+  const r=SHAPES[type][0];
+  let minx=9,miny=9,maxx=0,maxy=0;
+  for(const [x,y] of r){ minx=Math.min(minx,x);miny=Math.min(miny,y);maxx=Math.max(maxx,x);maxy=Math.max(maxy,y); }
+  const cell=2, bw=(maxx-minx+1)*cell, bh=(maxy-miny+1)*cell;
+  const px0=ox+Math.round((sw-bw)/2), py0=oy+Math.round((sh-bh)/2);
+  for(const [x,y] of r){ rect(px0+(x-minx)*cell, py0+(y-miny)*cell, cell, cell); }
+}
+
+let blink=0;
+function drawStartScreen(){
+  textCenter('TETRIS', 30);
+  // decorative divider
+  rect(14, 40, W-28, 1);
+  textCenter('HIGH', 54);
+  textCenter(String(highscore), 64);
+  if(Math.floor(frameCount/30)%2===0) textCenter('PRESS ANY', 96);
+  textCenter('KEY', 104);
+}
+function drawOverScreen(){
+  textCenter('GAME', 24);
+  textCenter('OVER', 34);
+  rect(14, 46, W-28, 1);
+  textCenter('SCORE', 56);
+  textCenter(String(score), 66);
+  if(newHigh){
+    if(Math.floor(frameCount/20)%2===0) textCenter('HIGHSCORE!', 84);
+  } else {
+    textCenter('BEST', 84);
+    textCenter(String(highscore), 92);
+  }
+  if(Math.floor(frameCount/30)%2===0) textCenter('TRY AGAIN', 112);
+}
+
+function render(){
+  clear();
+  if(state==='start') drawStartScreen();
+  else if(state==='play') drawPlayScreen();
+  else drawOverScreen();
+}
+
+// ---- main loop ----
+function loop(){
+  step();
+  render();
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ---- controls wiring ----
+const keyMap = {
+  '1':'1','2':'2','3':'3','4':'4',
+  'ArrowLeft':'3','ArrowRight':'4','ArrowUp':'2','ArrowDown':'1'
+};
+function setHeld(action, val){
+  if(action==='1'){ rotateHeld=val; toggleBtn('1',val); }
+  else if(action==='3'){ leftHeld=val; toggleBtn('3',val); }
+  else if(action==='4'){ rightHeld=val; toggleBtn('4',val); }
+}
+function toggleBtn(k,val){
+  const el=document.querySelector('.btn button[data-k="'+k+'"]');
+  if(el) el.classList[val?'add':'remove']('down');
+}
+window.addEventListener('keydown', e=>{
+  if(keyMap[e.key]){
+    const action = keyMap[e.key];
+    const wasHeld = (action==='3'&&leftHeld)||(action==='4'&&rightHeld)||(action==='1'&&rotateHeld);
+    setHeld(action, true);
+    if(!wasHeld) handle(action);   // avoid key-repeat spamming rotate/hold
+    e.preventDefault();
+    return;
+  }
+  // any other key starts/retries
+  if(state!=='play') handle('x');
+});
+window.addEventListener('keyup', e=>{
+  if(keyMap[e.key]) setHeld(keyMap[e.key], false);
+});
+document.querySelectorAll('.btn button').forEach(b=>{
+  const k=b.dataset.k;
+  const press=e=>{
+    e.preventDefault();
+    setHeld(k, true);
+    handle(k);
+    b.classList.add('down');
+  };
+  const release=()=>{
+    setHeld(k, false);
+    b.classList.remove('down');
+  };
+  b.addEventListener('mousedown', press);
+  b.addEventListener('touchstart', press, {passive:false});
+  b.addEventListener('mouseup', release);
+  b.addEventListener('mouseleave', release);
+  b.addEventListener('touchend', release);
+});
+</script>
+<!-- Added by tools/release.py to the copy of a game on the public page (site/play/<slug>.html).
+     Shows only the game screen, full size, and hides the prototype's panels and cheats.
+     The page underneath keeps running unchanged; the hidden parts are still there, just not shown. -->
+<style id="zb-play">
+html, body { margin: 0 !important; padding: 0 !important; height: 100% !important; overflow: hidden !important; background: #000 !important; }
+body > :not(#zb-stage) { display: none !important; }
+#zb-stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; }
+#zb-stage > canvas { display: block !important; position: static !important; transform: none !important; margin: 0 !important;
+  border: 0 !important; box-shadow: none !important; width: 100% !important; height: 100% !important;
+  object-fit: contain; image-rendering: pixelated; image-rendering: crisp-edges; }
+</style>
+<script>
+(function () {
+  var c = document.querySelector('#screen');
+  if (!c) return;
+  var stage = document.createElement('div');
+  stage.id = 'zb-stage';
+  document.body.appendChild(stage);
+  stage.appendChild(c);
+  // Stop arrow keys and Space scrolling the page this is embedded in
+  addEventListener('keydown', function (e) {
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) >= 0) e.preventDefault();
+  }, { passive: false });
+})();
+</script>
+</body>
+</html>

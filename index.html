@@ -8,17 +8,18 @@
 <link rel="icon" href="assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
 <style>
 :root{
+  --serif:"Iowan Old Style","Source Serif 4",Georgia,serif;
   --bg:#09090b; --surface:#111114; --surface-2:#16161a;
   --text:#ffffff; --muted:rgba(255,255,255,.62); --faint:rgba(255,255,255,.38);
   --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.18);
 }
 *{box-sizing:border-box}
 html{background:var(--bg)}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--serif);-webkit-font-smoothing:antialiased}
 .wrap{max-width:1040px;margin:0 auto;padding:0 20px 72px}
 
 /* Hero */
@@ -48,7 +49,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 Inter,system-
 .blurb{margin:0;color:var(--muted);font-size:14px}
 .pins{margin:12px 0 0;color:var(--faint);font:12px/1.5 "JetBrains Mono",ui-monospace,monospace}
 .actions{display:flex;align-items:center;gap:14px;margin-top:auto;padding-top:18px}
-.install{background:var(--text);color:#000;border:0;border-radius:99px;padding:9px 22px;font:600 14px Inter,system-ui,sans-serif;cursor:pointer;transition:opacity .15s}
+.install{background:var(--text);color:#000;border:0;border-radius:99px;padding:9px 22px;font:600 15px var(--serif);cursor:pointer;transition:opacity .15s}
 .install:hover{opacity:.85}
 .install:focus-visible,.dl:focus-visible{outline:2px solid var(--text);outline-offset:3px}
 .dl{color:var(--faint);font:13px "JetBrains Mono",ui-monospace,monospace;text-decoration:none}

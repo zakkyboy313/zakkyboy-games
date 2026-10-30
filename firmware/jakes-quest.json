@@ -1,0 +1,16 @@
+{
+  "name": "Jake's Quest",
+  "version": "1",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        {
+          "path": "jakes-quest.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

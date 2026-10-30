@@ -1,0 +1,16 @@
+{
+  "name": "Blocks",
+  "version": "1",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        {
+          "path": "tetris.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZakkyBoy Games</title>
+<script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
+<style>
+:root{--bg:#0d0d10;--card:#16161b;--line:#26262e;--ink:#ececf1;--dim:#9a9aa6;--accent:#ffd23f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 16px 56px}
+h1{margin:0;font-size:30px;letter-spacing:4px}
+h1 span,h2 span{color:var(--accent)}
+.lead{color:var(--dim);margin:6px 0 24px}
+.how{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:28px}
+.how ol{margin:8px 0 0;padding-left:22px}
+.how li{margin:4px 0}
+h2{font-size:18px;margin:28px 0 12px;display:flex;gap:10px;align-items:baseline}
+h2 span{font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.g{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column}
+.g h3{margin:0 0 4px;font-size:17px}
+.g p{margin:4px 0;font-size:14px}
+.pins{color:var(--dim);font-size:12px!important}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:auto;padding-top:10px}
+.install{background:var(--accent);color:#111;border:0;border-radius:8px;padding:8px 18px;font:700 14px ui-monospace,monospace;cursor:pointer}
+.dl{color:var(--dim);font-size:13px}
+.warn{color:#ffb48a;font-size:13px}
+.help{color:var(--dim);font-size:14px;margin-top:36px;border-top:1px solid var(--line);padding-top:16px}
+.help b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ZAKKY<span>BOY</span> GAMES</h1>
+  <p class="lead">Games for the ZakkyBoy handheld. Pick one, click Install, and it goes straight onto your console.</p>
+  <div class="how">
+    <b>How to install</b>
+    <ol>
+      <li>Use <b>Chrome or Edge on a computer</b> (Safari and phones can't do this).</li>
+      <li>Plug your ZakkyBoy into the computer with a USB-C <b>data</b> cable.</li>
+      <li>Click <b>Install</b> on a game, choose the port that appears (often "USB JTAG/serial debug unit"), then <b>Connect</b> and <b>Install</b>.</li>
+      <li>Wait for "Installation complete", then unplug or press reset. One game is on the console at a time; installing another replaces it.</li>
+    </ol>
+  </div>
+
+    <section>
+      <h2>1 button <span>ZB-1</span></h2>
+      <div class="grid">
+      <article class="g">
+        <h3>Zakky Pixel</h3>
+        <p>The first ZakkyBoy game: a one-button helicopter.</p>
+        <p class="pins">Button: GPIO20</p>
+        <div class="row">
+          <esp-web-install-button manifest="firmware/zakky-pixel.json">
+            <button slot="activate" class="install">Install</button>
+            <span slot="unsupported" class="warn">Open this page in Chrome or Edge on a computer to install.</span>
+            <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+          </esp-web-install-button>
+          <a class="dl" href="firmware/zakky-pixel.bin" download>Download .bin</a>
+        </div>
+      </article>
+      <article class="g">
+        <h3>Zakky Gun</h3>
+        <p>One-button arcade shooter.</p>
+        <p class="pins">Button: GPIO20</p>
+        <div class="row">
+          <esp-web-install-button manifest="firmware/zakky-gun.json">
+            <button slot="activate" class="install">Install</button>
+            <span slot="unsupported" class="warn">Open this page in Chrome or Edge on a computer to install.</span>
+            <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+          </esp-web-install-button>
+          <a class="dl" href="firmware/zakky-gun.bin" download>Download .bin</a>
+        </div>
+      </article>
+      <article class="g">
+        <h3>Zakky Pixel + Zakky Gun</h3>
+        <p>Both games on one install. On the menu: tap for Zakky Pixel, hold for Zakky Gun.</p>
+        <p class="pins">Button: GPIO20</p>
+        <div class="row">
+          <esp-web-install-button manifest="firmware/zakky-pixel-gun.json">
+            <button slot="activate" class="install">Install</button>
+            <span slot="unsupported" class="warn">Open this page in Chrome or Edge on a computer to install.</span>
+            <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+          </esp-web-install-button>
+          <a class="dl" href="firmware/zakky-pixel-gun.bin" download>Download .bin</a>
+        </div>
+      </article>
+      <article class="g">
+        <h3>Gravity Tunnel</h3>
+        <p>One-button tunnel game. Zakky Gun grew out of it.</p>
+        <p class="pins">Button: GPIO20</p>
+        <div class="row">
+          <esp-web-install-button manifest="firmware/gravity-tunnel.json">
+            <button slot="activate" class="install">Install</button>
+            <span slot="unsupported" class="warn">Open this page in Chrome or Edge on a computer to install.</span>
+            <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+          </esp-web-install-button>
+          <a class="dl" href="firmware/gravity-tunnel.bin" download>Download .bin</a>
+        </div>
+      </article>
+      </div>
+    </section>
+    <section>
+      <h2>2 buttons <span>ZB-2</span></h2>
+      <div class="grid">
+      <article class="g">
+        <h3>Zakky Dungeon</h3>
+        <p>Card dungeon: fight monsters, drink potions and pick up weapons from a deck.</p>
+        <p class="pins">A (cycle): GPIO3 · B (confirm): GPIO20</p>
+        <div class="row">
+          <esp-web-install-button manifest="firmware/zakky-dungeon.json">
+            <button slot="activate" class="install">Install</button>
+            <span slot="unsupported" class="warn">Open this page in Chrome or Edge on a computer to install.</span>
+            <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+          </esp-web-install-button>
+          <a class="dl" href="firmware/zakky-dungeon.bin" download>Download .bin</a>
+        </div>
+      </article>
+      <article class="g">
+        <h3>Zakky Drift</h3>
+        <p>Drift racer. One button steers left, the other right.</p>
+        <p class="pins">A (confirm / right): GPIO20 · B (cycle / left): GPIO3</p>
+        <div class="row">
+          <esp-web-install-button manifest="firmware/zakky-drift.json">
+            <button slot="activate" class="install">Install</button>
+            <span slot="unsupported" class="warn">Open this page in Chrome or Edge on a computer to install.</span>
+            <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+          </esp-web-install-button>
+          <a class="dl" href="firmware/zakky-drift.bin" download>Download .bin</a>
+        </div>
+      </article>
+      </div>
+    </section>
+    <section>
+      <h2>6 buttons <span>ZB-6</span></h2>
+      <div class="grid">
+      <article class="g">
+        <h3>Blocks</h3>
+        <p>Falling blocks, played with the console held upright. Built for an SH1106 screen rather than the usual SSD1306.</p>
+        <p class="pins">A 21 · B 20 · Up 4 · Down 2 · Left 5 · Right 3 · screen SDA 6, SCL 7</p>
+        <div class="row">
+          <esp-web-install-button manifest="firmware/tetris.json">
+            <button slot="activate" class="install">Install</button>
+            <span slot="unsupported" class="warn">Open this page in Chrome or Edge on a computer to install.</span>
+            <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+          </esp-web-install-button>
+          <a class="dl" href="firmware/tetris.bin" download>Download .bin</a>
+        </div>
+      </article>
+      </div>
+    </section>
+    <section>
+      <h2>7 buttons <span>ZB-7</span></h2>
+      <div class="grid">
+      <article class="g">
+        <h3>Jake&#x27;s Quest</h3>
+        <p>Roguelike in the spirit of Binding of Isaac: move, shoot and bomb your way through.</p>
+        <p class="pins">Up 9 · Down 5 · Left 6 · Right 8 · A 1 · B 0 · Start 2 (finds the screen by itself)</p>
+        <div class="row">
+          <esp-web-install-button manifest="firmware/jakes-quest.json">
+            <button slot="activate" class="install">Install</button>
+            <span slot="unsupported" class="warn">Open this page in Chrome or Edge on a computer to install.</span>
+            <span slot="not-allowed" class="warn">Open this page over https to install.</span>
+          </esp-web-install-button>
+          <a class="dl" href="firmware/jakes-quest.bin" download>Download .bin</a>
+        </div>
+      </article>
+      </div>
+    </section>
+  <div class="help">
+    <b>Not working?</b> If no port appears: try another cable (some only charge), or hold the <b>BOOT</b> button on the board while plugging it in, then click Install again.
+    If a game installs but the buttons do nothing, your buttons are on different pins from the ones listed; ask Zak for a version built for your wiring.
+  </div>
+</div>
+</body>
+</html>

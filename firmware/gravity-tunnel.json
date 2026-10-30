@@ -1,0 +1,16 @@
+{
+  "name": "Gravity Tunnel",
+  "version": "1",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        {
+          "path": "gravity-tunnel.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

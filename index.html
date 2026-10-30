@@ -35,7 +35,8 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--serif);
 .steps b{color:var(--text);font-weight:600}
 
 /* Filter */
-.filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 18px}
+.filter-label{color:var(--faint);font-size:14px;margin-right:4px}
 .chip{background:transparent;color:var(--muted);border:1px solid var(--line-2);border-radius:99px;padding:6px 14px;font:14px var(--serif);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .chip span{font:12px "JetBrains Mono",ui-monospace,monospace;color:var(--faint);margin-left:4px}
 .chip:hover{color:var(--text);border-color:var(--text)}
@@ -125,7 +126,7 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
 <div class="wrap">
   <header class="hero">
     <img class="logo" src="assets/logo.png" alt="ZakkyBoy 313" width="1058" height="643">
-    <p class="tagline">Games for the ZakkyBoy handheld. Pick one and install it straight from your browser.</p>
+    <p class="tagline">8,192 pixels. A handful of buttons. No mercy.<br>Tiny games for tiny hardware.</p>
   </header>
 
   <ol class="steps">
@@ -135,7 +136,7 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
     <li>Wait for <b>Installation complete</b>, then press reset.</li>
   </ol>
 
-  <nav class="filters" aria-label="Filter by number of buttons"><button class="chip" type="button" data-filter="all" aria-pressed="true">All <span>8</span></button><button class="chip" type="button" data-filter="1" aria-pressed="false">1 button <span>4</span></button><button class="chip" type="button" data-filter="2" aria-pressed="false">2 buttons <span>2</span></button><button class="chip" type="button" data-filter="6" aria-pressed="false">6 buttons <span>1</span></button><button class="chip" type="button" data-filter="7" aria-pressed="false">7 buttons <span>1</span></button></nav>
+  <nav class="filters" aria-label="Filter by number of buttons"><span class="filter-label">My ZakkyBoy has</span><button class="chip" type="button" data-filter="all" aria-pressed="true">All games <span>8</span></button><button class="chip" type="button" data-filter="1" aria-pressed="false">1 button <span>4</span></button><button class="chip" type="button" data-filter="2" aria-pressed="false">2 buttons <span>6</span></button><button class="chip" type="button" data-filter="6" aria-pressed="false">6 buttons <span>7</span></button><button class="chip" type="button" data-filter="7" aria-pressed="false">7 buttons <span>8</span></button></nav>
   <section class="list">
       <article class="game" data-buttons="1" data-slug="zakky-pixel" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-pixel">
@@ -354,7 +355,8 @@ const games = [...document.querySelectorAll('.game')];
 document.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
   document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c === chip));
   const f = chip.dataset.filter;
-  games.forEach(g => { g.hidden = f !== 'all' && g.dataset.buttons !== f; });
+  // A console with n buttons can play every game that needs n or fewer
+  games.forEach(g => { g.hidden = f !== 'all' && +g.dataset.buttons > +f; });
   if (playing && playing.game.hidden) stop();
 }));
 

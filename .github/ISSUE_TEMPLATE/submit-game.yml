@@ -1,0 +1,78 @@
+name: Submit a game
+description: Send in a ZakkyBoy game you've made, to be considered for the Community page.
+title: "[Game] "
+labels: ["game submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for making a ZakkyBoy game! Zak will play it, try it on real hardware and reply here.
+        **Accepted** games go on the [Community page](https://zakkyboy313.github.io/zakkyboy-games/community.html), credited to you.
+        If it needs changes, you'll get a comment saying what to fix. Reply here with a new zip when it's ready.
+
+        New to this? The [guide](https://zakkyboy313.github.io/zakkyboy-games/guide.html#make) shows how to make one with AI.
+  - type: input
+    id: name
+    attributes:
+      label: Game name
+      placeholder: Frog Hop
+    validations:
+      required: true
+  - type: input
+    id: blurb
+    attributes:
+      label: One-line description
+      description: Shown under the game's name on the Community page.
+      placeholder: Hop between drifting lily pads. One button, hold to jump further.
+    validations:
+      required: true
+  - type: dropdown
+    id: buttons
+    attributes:
+      label: How many buttons does it use?
+      options: ["1", "2", "3", "4", "5", "6", "7", "8 or more"]
+    validations:
+      required: true
+  - type: input
+    id: pins
+    attributes:
+      label: Button and screen pins
+      description: Which GPIO pin each button is on, and the screen's SDA/SCL pins.
+      placeholder: "A = GPIO20 · screen SDA 6, SCL 7"
+    validations:
+      required: true
+  - type: dropdown
+    id: board
+    attributes:
+      label: Board
+      options: ["Seeed XIAO ESP32-C3", "ESP32-C3 mini / dev board", "Something else (say below)"]
+    validations:
+      required: true
+  - type: textarea
+    id: howto
+    attributes:
+      label: How to play
+      description: Controls, the goal, anything a new player should know.
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Your files
+      description: Put your HTML prototype (.html) and Arduino sketch (.ino) into one .zip file and drag it into this box. A short video or photo of it running on your ZakkyBoy is a bonus.
+      placeholder: Drag your .zip here
+    validations:
+      required: true
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Before you send it
+      options:
+        - label: I made this game (AI help is fine) and it isn't a copy of someone else's game.
+          required: true
+        - label: It runs on a real ZakkyBoy with a 128x64 screen.
+          required: true
+        - label: It's suitable for all ages.
+          required: true
+        - label: Zak can publish it on the ZakkyBoy Games site, credited to my GitHub name.
+          required: true

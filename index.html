@@ -10,38 +10,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
+<link rel="stylesheet" href="assets/site.css">
 <style>
-:root{
-  --serif:"Iowan Old Style","Source Serif 4",Georgia,serif;
-  --bg:#09090b; --surface:#111114; --surface-2:#16161a;
-  --text:#ffffff; --muted:rgba(255,255,255,.62); --faint:rgba(255,255,255,.38);
-  --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.18);
-}
-*{box-sizing:border-box}
-html{background:var(--bg)}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--serif);-webkit-font-smoothing:antialiased}
-.wrap{max-width:1040px;margin:0 auto;padding:0 20px 72px}
-
-/* Hero */
-.hero{text-align:center;padding:64px 0 40px}
-.logo{width:min(400px,78vw);height:auto;display:block;margin:0 auto;
-  filter:invert(1) drop-shadow(0 0 22px rgba(150,170,255,.35))}
-.tagline{color:var(--muted);font-size:17px;margin:22px 0 0}
-
-/* How to install */
-.steps{list-style:none;margin:8px 0 56px;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;counter-reset:s}
-.steps li{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;counter-increment:s;font-size:14px;color:var(--muted)}
-.steps li::before{content:counter(s);display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--line-2);border-radius:50%;font:500 13px "JetBrains Mono",ui-monospace,monospace;color:var(--text);margin-bottom:12px}
-.steps b{color:var(--text);font-weight:600}
-
-/* Filter */
-.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 18px}
-.filter-label{color:var(--faint);font-size:14px;margin-right:4px}
-.chip{background:transparent;color:var(--muted);border:1px solid var(--line-2);border-radius:99px;padding:6px 14px;font:14px var(--serif);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
-.chip span{font:12px "JetBrains Mono",ui-monospace,monospace;color:var(--faint);margin-left:4px}
-.chip:hover{color:var(--text);border-color:var(--text)}
-.chip[aria-pressed="true"]{background:var(--text);color:#000;border-color:var(--text)}
-.chip[aria-pressed="true"] span{color:rgba(0,0,0,.55)}
+/* Filter: one sharp dropdown, OLED-menu style */
+.filters{padding:0 8px 14px}
+.select{position:relative;display:inline-block}
+.select select{appearance:none;-webkit-appearance:none;background:transparent;color:var(--text);
+  border:1px solid var(--line-2);padding:6px 38px 6px 12px;cursor:pointer;font:15px var(--serif);transition:border-color .12s}
+.select select:hover,.select select:focus-visible{border-color:var(--text);outline:none}
+.select select option{background:#000;color:#fff}
+/* Pixel-stepped arrow, like a sprite on the ZakkyBoy screen */
+.select svg{position:absolute;right:12px;top:50%;width:10px;height:6px;margin-top:-3px;pointer-events:none;shape-rendering:crispEdges}
 
 /* List */
 .list{border-top:1px solid var(--line)}
@@ -52,6 +31,14 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--serif);
 .row:focus-visible{outline:2px solid var(--text);outline-offset:-2px}
 .thumb{flex:none;width:96px;height:48px;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .thumb img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+/* Hover a thumbnail: a big preview of the gameplay screen pops out beside it */
+.thumb-wrap{position:relative;flex:none;display:flex}
+.peek{position:absolute;z-index:5;left:calc(100% + 14px);top:50%;width:384px;aspect-ratio:2/1;background:#000;
+  border:1px solid var(--text);box-shadow:0 12px 40px rgba(0,0,0,.7);opacity:0;pointer-events:none;
+  transform:translateY(-50%) scale(.96);transform-origin:left center;transition:opacity .15s,transform .15s}
+.peek.portrait{width:160px;aspect-ratio:1/2}
+.peek img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;display:block}
+@media (hover:hover){ .thumb-wrap:hover .peek{opacity:1;transform:translateY(-50%) scale(1)} }
 .row-text{flex:1;min-width:0;display:flex;flex-direction:column}
 .name{font-size:18px;font-weight:600;letter-spacing:-.01em}
 .row-blurb{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -98,49 +85,32 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--serif);
 .dl:hover{color:var(--text)}
 .warn{color:var(--muted);font-size:13px}
 
-/* Help */
-.help{margin-top:64px;padding-top:28px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);gap:24px;color:var(--muted);font-size:14px}
-.help h4{margin:0 0 6px;color:var(--text);font-size:14px;font-weight:600}
-.help p{margin:0}
-footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.2em}
-
 @media (max-width:800px){
-  .steps{grid-template-columns:1fr 1fr}
-  .help{grid-template-columns:1fr}
   .detail-inner{grid-template-columns:1fr;gap:18px}
 }
 @media (max-width:480px){
-  .hero{padding:44px 0 28px}
-  .steps{grid-template-columns:1fr}
   .row{gap:12px}
   .thumb{width:72px;height:36px}
   .tag{display:none}
   .stage.portrait .screen{height:340px}
 }
 @media (prefers-reduced-motion:reduce){
-  .detail,.chev,.shot,.row{transition:none}
+  .detail,.chev,.shot,.row,.peek{transition:none}
 }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="hero">
-    <img class="logo" src="assets/logo.png" alt="ZakkyBoy 313" width="1058" height="643">
-    <p class="tagline">8,192 pixels. A handful of buttons. No mercy.<br>Tiny games for tiny hardware.</p>
+    <a href="index.html" aria-label="ZakkyBoy Games home"><img class="logo" src="assets/logo.png" alt="ZakkyBoy 313" width="1058" height="643"></a>
+    <nav class="nav" aria-label="Main"><a href="index.html" aria-current="page">Games</a><a href="guide.html">Guide</a><a href="community.html">Community</a></nav>
   </header>
 
-  <ol class="steps">
-    <li>Open this page in <b>Chrome or Edge</b> on a computer.</li>
-    <li>Plug in your ZakkyBoy with a USB-C <b>data</b> cable.</li>
-    <li>Click <b>Install</b>, pick the port that appears, then <b>Connect</b>.</li>
-    <li>Wait for <b>Installation complete</b>, then press reset.</li>
-  </ol>
-
-  <nav class="filters" aria-label="Filter by number of buttons"><span class="filter-label">My ZakkyBoy has</span><button class="chip" type="button" data-filter="all" aria-pressed="true">All games <span>8</span></button><button class="chip" type="button" data-filter="1" aria-pressed="false">1 button <span>4</span></button><button class="chip" type="button" data-filter="2" aria-pressed="false">2 buttons <span>6</span></button><button class="chip" type="button" data-filter="6" aria-pressed="false">6 buttons <span>7</span></button><button class="chip" type="button" data-filter="7" aria-pressed="false">7 buttons <span>8</span></button></nav>
+  <nav class="filters" aria-label="Filter by number of buttons"><span class="select"><select id="filter" aria-label="Show games for a console with this many buttons"><option value="all">All games</option><option value="7">7-button</option><option value="6">6-button</option><option value="2">2-button</option><option value="1">1-button</option></select><svg viewBox="0 0 10 6" aria-hidden="true"><path fill="currentColor" d="M0 0h10v2H8v2H6v2H4V4H2V2H0z"/></svg></span></nav>
   <section class="list">
       <article class="game" data-buttons="1" data-slug="zakky-pixel" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-pixel">
-          <span class="thumb"><img src="assets/shots/zakky-pixel-title.png" alt="" loading="lazy"></span>
+          <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/zakky-pixel-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/zakky-pixel-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Zakky Pixel</span><span class="row-blurb">The first ZakkyBoy game: a one-button helicopter.</span></span>
           <span class="tag">ZB-1</span>
           <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -165,7 +135,7 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
       </article>
       <article class="game" data-buttons="1" data-slug="zakky-gun" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-gun">
-          <span class="thumb"><img src="assets/shots/zakky-gun-title.png" alt="" loading="lazy"></span>
+          <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/zakky-gun-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/zakky-gun-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Zakky Gun</span><span class="row-blurb">One-button arcade shooter.</span></span>
           <span class="tag">ZB-1</span>
           <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -190,7 +160,7 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
       </article>
       <article class="game" data-buttons="1" data-slug="zakky-pixel-gun">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-pixel-gun">
-          <span class="thumb"><img src="assets/shots/zakky-pixel-title.png" alt="" loading="lazy"></span>
+          <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/zakky-pixel-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/zakky-pixel-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Zakky Pixel + Zakky Gun</span><span class="row-blurb">Both games on one install. On the menu: tap for Zakky Pixel, hold for Zakky Gun.</span></span>
           <span class="tag">ZB-1</span>
           <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -215,7 +185,7 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
       </article>
       <article class="game" data-buttons="1" data-slug="gravity-tunnel" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-gravity-tunnel">
-          <span class="thumb"><img src="assets/shots/gravity-tunnel-title.png" alt="" loading="lazy"></span>
+          <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/gravity-tunnel-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/gravity-tunnel-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Gravity Tunnel</span><span class="row-blurb">One-button tunnel game. Zakky Gun grew out of it.</span></span>
           <span class="tag">ZB-1</span>
           <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -240,7 +210,7 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
       </article>
       <article class="game" data-buttons="2" data-slug="zakky-dungeon">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-dungeon">
-          <span class="thumb"><img src="assets/shots/zakky-dungeon-title.png" alt="" loading="lazy"></span>
+          <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/zakky-dungeon-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/zakky-dungeon-title.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Zakky Dungeon</span><span class="row-blurb">Card dungeon: fight monsters, drink potions and pick up weapons from a deck.</span></span>
           <span class="tag">ZB-2</span>
           <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -265,7 +235,7 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
       </article>
       <article class="game" data-buttons="2" data-slug="zakky-drift" data-play="[{&quot;label&quot;: &quot;B&quot;, &quot;sub&quot;: &quot;left&quot;, &quot;key&quot;: &quot;s&quot;, &quot;code&quot;: &quot;KeyS&quot;, &quot;hint&quot;: &quot;S&quot;}, {&quot;label&quot;: &quot;A&quot;, &quot;sub&quot;: &quot;right&quot;, &quot;key&quot;: &quot;a&quot;, &quot;code&quot;: &quot;KeyA&quot;, &quot;hint&quot;: &quot;A&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-drift">
-          <span class="thumb"><img src="assets/shots/zakky-drift-title.png" alt="" loading="lazy"></span>
+          <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/zakky-drift-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/zakky-drift-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Zakky Drift</span><span class="row-blurb">Drift racer. One button steers left, the other right.</span></span>
           <span class="tag">ZB-2</span>
           <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -290,7 +260,7 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
       </article>
       <article class="game" data-buttons="6" data-slug="tetris" data-play="[{&quot;label&quot;: &quot;◀&quot;, &quot;sub&quot;: &quot;move&quot;, &quot;key&quot;: &quot;ArrowLeft&quot;, &quot;code&quot;: &quot;ArrowLeft&quot;, &quot;hint&quot;: &quot;←&quot;}, {&quot;label&quot;: &quot;▶&quot;, &quot;sub&quot;: &quot;move&quot;, &quot;key&quot;: &quot;ArrowRight&quot;, &quot;code&quot;: &quot;ArrowRight&quot;, &quot;hint&quot;: &quot;→&quot;}, {&quot;label&quot;: &quot;↻&quot;, &quot;sub&quot;: &quot;rotate&quot;, &quot;key&quot;: &quot;ArrowDown&quot;, &quot;code&quot;: &quot;ArrowDown&quot;, &quot;hint&quot;: &quot;↓&quot;}, {&quot;label&quot;: &quot;▼&quot;, &quot;sub&quot;: &quot;drop&quot;, &quot;key&quot;: &quot;ArrowUp&quot;, &quot;code&quot;: &quot;ArrowUp&quot;, &quot;hint&quot;: &quot;↑&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-tetris">
-          <span class="thumb portrait"><img src="assets/shots/tetris-title.png" alt="" loading="lazy"></span>
+          <span class="thumb-wrap"><span class="thumb portrait"><img src="assets/shots/tetris-title.png" alt="" loading="lazy"></span><span class="peek portrait" aria-hidden="true"><img src="assets/shots/tetris-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Blocks</span><span class="row-blurb">Falling blocks, played with the console held upright. Built for an SH1106 screen rather than the usual SSD1306.</span></span>
           <span class="tag">ZB-6</span>
           <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -315,7 +285,7 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
       </article>
       <article class="game" data-buttons="7" data-slug="jakes-quest" data-play="[{&quot;label&quot;: &quot;▲&quot;, &quot;key&quot;: &quot;ArrowUp&quot;, &quot;code&quot;: &quot;ArrowUp&quot;, &quot;hint&quot;: &quot;↑&quot;, &quot;pad&quot;: &quot;up&quot;}, {&quot;label&quot;: &quot;◀&quot;, &quot;key&quot;: &quot;ArrowLeft&quot;, &quot;code&quot;: &quot;ArrowLeft&quot;, &quot;hint&quot;: &quot;←&quot;, &quot;pad&quot;: &quot;left&quot;}, {&quot;label&quot;: &quot;▶&quot;, &quot;key&quot;: &quot;ArrowRight&quot;, &quot;code&quot;: &quot;ArrowRight&quot;, &quot;hint&quot;: &quot;→&quot;, &quot;pad&quot;: &quot;right&quot;}, {&quot;label&quot;: &quot;▼&quot;, &quot;key&quot;: &quot;ArrowDown&quot;, &quot;code&quot;: &quot;ArrowDown&quot;, &quot;hint&quot;: &quot;↓&quot;, &quot;pad&quot;: &quot;down&quot;}, {&quot;label&quot;: &quot;Start&quot;, &quot;key&quot;: &quot;Enter&quot;, &quot;code&quot;: &quot;Enter&quot;, &quot;hint&quot;: &quot;Enter&quot;}, {&quot;label&quot;: &quot;B&quot;, &quot;key&quot;: &quot;x&quot;, &quot;code&quot;: &quot;KeyX&quot;, &quot;hint&quot;: &quot;X&quot;}, {&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot;z&quot;, &quot;code&quot;: &quot;KeyZ&quot;, &quot;hint&quot;: &quot;Z&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-jakes-quest">
-          <span class="thumb"><img src="assets/shots/jakes-quest-title.png" alt="" loading="lazy"></span>
+          <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/jakes-quest-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/jakes-quest-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Jake&#x27;s Quest</span><span class="row-blurb">Roguelike in the spirit of Binding of Isaac: move, shoot and bomb your way through.</span></span>
           <span class="tag">ZB-7</span>
           <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -339,12 +309,6 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
         </div></div>
       </article>
   </section>
-
-  <div class="help">
-    <div><h4>No port in the list?</h4><p>Try another cable (some only charge). Or hold <b>BOOT</b> on the board while plugging in, then click Install again.</p></div>
-    <div><h4>Buttons don't respond?</h4><p>Your buttons are on different pins from the ones listed on the card. Ask Zak for a version built for your wiring.</p></div>
-    <div><h4>One game at a time</h4><p>Installing a game replaces the one on the console. Zakky Pixel + Zakky Gun puts two on at once.</p></div>
-  </div>
   <footer>ZAKKYBOY · 313</footer>
 </div>
 <script>
@@ -352,13 +316,13 @@ footer{margin-top:48px;text-align:center;color:var(--faint);font:12px "JetBrains
 // the on-screen buttons and the keyboard send key presses into it.
 const games = [...document.querySelectorAll('.game')];
 
-document.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
-  document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c === chip));
-  const f = chip.dataset.filter;
+const filter = document.getElementById('filter');
+filter.addEventListener('change', () => {
+  const f = filter.value;
   // A console with n buttons can play every game that needs n or fewer
   games.forEach(g => { g.hidden = f !== 'all' && +g.dataset.buttons > +f; });
   if (playing && playing.game.hidden) stop();
-}));
+});
 
 games.forEach(g => g.querySelector('.row').addEventListener('click', () => {
   const open = !g.classList.contains('open');

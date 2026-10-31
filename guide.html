@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide · ZakkyBoy Games</title>
+<meta name="description" content="Install and update ZakkyBoy games, make your own with AI, and submit it to the community page.">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <a href="index.html" aria-label="ZakkyBoy Games home"><img class="logo" src="assets/logo.png" alt="ZakkyBoy 313" width="1058" height="643"></a>
+    <nav class="nav" aria-label="Main"><a href="index.html">Games</a><a href="guide.html" aria-current="page">Guide</a><a href="community.html">Community</a></nav>
+  </header>
+  <!-- ============ INSTALL ============ -->
+  <section class="section" id="install">
+    <h2>Install &amp; update games</h2>
+    <p class="lede">No software needed. It all happens in the browser.</p>
+    <ol class="steps">
+      <li>Open the <a href="index.html">Games page</a> in <b>Chrome or Edge</b> on a computer.</li>
+      <li>Plug in your ZakkyBoy with a USB-C <b>data</b> cable.</li>
+      <li>Open a game, click <b>Install</b>, pick the port that appears, then <b>Connect</b>.</li>
+      <li>Wait for <b>Installation complete</b>, then press reset.</li>
+    </ol>
+    <div class="help">
+      <div><h4>Updating a game</h4><p>Games get better over time. To get the latest version, just click <b>Install</b> on it again. It replaces whatever is on the console.</p></div>
+      <div><h4>No port in the list?</h4><p>Try another cable (some only charge). Or hold <b>BOOT</b> on the board while plugging in, then click Install again.</p></div>
+      <div><h4>Buttons don't respond?</h4><p>Your buttons are on different pins from the ones listed on the game. Ask Zak for a version built for your wiring.</p></div>
+      <div><h4>One game at a time</h4><p>Installing a game replaces the one on the console. Zakky Pixel + Zakky Gun puts two on at once.</p></div>
+      <div><h4>Got a .bin file?</h4><p>Every game also has a <b>.bin</b> download. It can be flashed at address <code>0x0</code> with any ESP32 web flasher.</p></div>
+      <div><h4>Printable guide</h4><p>Prefer paper? Download the <a href="ZakkyBoy install guide.pdf">install guide (PDF)</a>.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ MAKE ============ -->
+  <section class="section" id="make">
+    <h2>Make your own ZakkyBoy game</h2>
+    <p class="lede">This is how every game on this site was made: build a playable prototype in the browser with an AI chatbot (Claude, ChatGPT, Gemini…), play it until it's fun, then have the AI turn it into code for the console. You don't need to know how to code.</p>
+
+    <div class="stage-step">
+      <div class="stage-num">1</div>
+      <div>
+        <h3>Prototype it in HTML with AI</h3>
+        <p>Describe your game below and pick your buttons. Then copy the prompt, paste it into an AI chat, and save the HTML file it gives you (for example <code>my-game.html</code>). Double-click the file to play it in your browser.</p>
+        <div class="builder">
+          <div class="field">
+            <label for="idea">Your game idea <span>(a few sentences: what you do, how you win or lose)</span></label>
+            <textarea id="idea" placeholder="e.g. A frog hops between lily pads. Tap A to jump; hold it longer to jump further. Miss a pad and you sink. Pads drift faster as the score goes up."></textarea>
+          </div>
+          <div class="builder-row" role="group" aria-label="Buttons">
+            <span class="label">My ZakkyBoy has</span>
+            <button class="chip" type="button" data-layout="1" aria-pressed="true">1 button</button>
+            <button class="chip" type="button" data-layout="2" aria-pressed="false">2 buttons</button>
+            <button class="chip" type="button" data-layout="custom" aria-pressed="false">My own wiring</button>
+          </div>
+          <div class="form-grid" id="custom" hidden>
+            <div class="field">
+              <label for="cbuttons">Buttons and pins</label>
+              <input type="text" id="cbuttons" placeholder="e.g. A = GPIO20, B = GPIO3, START = GPIO2 (separate with commas)">
+            </div>
+            <div class="field">
+              <label for="cscreen">Screen pins</label>
+              <input type="text" id="cscreen" value="SDA = GPIO6, SCL = GPIO7">
+            </div>
+          </div>
+          <div class="prompt">
+            <pre id="prompt1"></pre>
+            <div class="prompt-actions"><button class="btn" type="button" data-copy="prompt1">Copy prompt</button><span class="copied" aria-live="polite"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage-step">
+      <div class="stage-num">2</div>
+      <div>
+        <h3>Playtest and improve it</h3>
+        <p>Play it and tell the AI what to change, in plain words, in the same chat. Ask for the whole file back each time, then refresh the page.</p>
+        <ul>
+          <li>"The jump feels floaty. Make gravity stronger and the jump snappier."</li>
+          <li>"Add a debug key: press D to skip to the next level."</li>
+          <li>"Make it harder over time, but start easier."</li>
+        </ul>
+        <p>Keep it simple. 128×64 pixels is tiny: big shapes, a clear score and one idea done well beat lots of features.</p>
+      </div>
+    </div>
+
+    <div class="stage-step">
+      <div class="stage-num">3</div>
+      <div>
+        <h3>Convert it to an Arduino sketch (.ino) with AI</h3>
+        <p>When you're happy, start a <b>new chat</b>, paste this prompt, and paste your whole HTML file where it says. Save the result as <code>my_game.ino</code> inside a folder with the same name (<code>my_game/my_game.ino</code>). The pins match what you picked in step 1.</p>
+        <div class="prompt" style="margin-top:14px">
+          <pre id="prompt2"></pre>
+          <div class="prompt-actions"><button class="btn" type="button" data-copy="prompt2">Copy prompt</button><span class="copied" aria-live="polite"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage-step">
+      <div class="stage-num">4</div>
+      <div>
+        <h3>Flash it onto your ZakkyBoy</h3>
+        <p>You do this once with the free Arduino IDE. After the first time, it's just steps 5 to 7.</p>
+        <ol>
+          <li>Download and install <a href="https://www.arduino.cc/en/software" target="_blank" rel="noopener">Arduino IDE 2</a>.</li>
+          <li>Go to <b>File → Preferences</b> (on a Mac: <b>Arduino IDE → Settings</b>). In <b>Additional boards manager URLs</b>, paste:<br><code>https://espressif.github.io/arduino-esp32/package_esp32_index.json</code></li>
+          <li>Open <b>Tools → Board → Boards Manager</b>, search <b>esp32</b>, and install <b>esp32 by Espressif Systems</b>.</li>
+          <li>Open <b>Tools → Manage Libraries</b>, search <b>U8g2</b>, and install it (plus anything else the AI listed).</li>
+          <li>Open your <code>my_game.ino</code>. Choose <b>Tools → Board → esp32 → XIAO_ESP32C3</b>.</li>
+          <li>Plug in your ZakkyBoy with a data cable and pick its port under <b>Tools → Port</b>.</li>
+          <li>Click <b>Upload</b> (the → arrow). When it says <b>Done uploading</b>, your game starts.</li>
+        </ol>
+        <p><b>Red error text?</b> Copy all of it into your AI chat with "This didn't compile, please fix it" and upload the new version. <b>Can't find the board?</b> Hold <b>BOOT</b> while plugging in, then upload again.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SUBMIT ============ -->
+  <section class="section" id="submit">
+    <h2>Submit your game</h2>
+    <p class="lede">Made something you're proud of? Send it in. If it's accepted, it goes on the <a href="community.html">Community page</a> with your name on it, so anyone can play it in the browser and install it.</p>
+
+    <div class="two-col">
+      <div class="panel">
+        <h3>How to send it</h3>
+        <ul>
+          <li>Make a free <a href="https://github.com/signup" target="_blank" rel="noopener">GitHub account</a> if you don't have one.</li>
+          <li>Put your <b>.html</b> prototype and your <b>.ino</b> sketch into one <b>.zip</b> file.</li>
+          <li>Click <b>Submit a game</b> below, fill in the form, and drag the zip into the Files box.</li>
+        </ul>
+        <p style="margin-top:18px"><a class="btn" href="https://github.com/zakkyboy313/zakkyboy-games/issues/new?template=submit-game.yml" target="_blank" rel="noopener">Submit a game</a></p>
+      </div>
+      <div class="panel">
+        <h3>What happens next</h3>
+        <ul>
+          <li>Zak plays your game and tries it on real hardware.</li>
+          <li><b>Accepted:</b> it goes on the Community page, credited to you.</li>
+          <li><b>Changes needed:</b> you get a comment explaining what to fix to get it on the site. Reply on the same submission with a new zip when it's ready.</li>
+        </ul>
+        <p style="margin-top:12px">Games need to be your own (AI help is fine), run on a standard ZakkyBoy (128×64 screen), and be friendly for all ages.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>ZAKKYBOY · 313</footer>
+</div>
+<script>
+// Prompt builder: fills the two AI prompts with the player's idea and button wiring, and copies them.
+const LAYOUTS = {
+  1: { n: '1 button', buttons: ['A = GPIO20 (the only button)'], keys: 'Space = A' },
+  2: { n: '2 buttons', buttons: ['A = GPIO20 (confirm)', 'B = GPIO3 (cycle / back)'], keys: 'Z = A, X = B' },
+};
+let layout = '1';
+const $ = id => document.getElementById(id);
+
+function wiring() {
+  if (layout !== 'custom') return { ...LAYOUTS[layout], screen: 'SDA = GPIO6, SCL = GPIO7' };
+  const buttons = $('cbuttons').value.split(',').map(s => s.trim()).filter(Boolean);
+  if (!buttons.length) buttons.push('[LIST YOUR BUTTONS AND THEIR GPIO PINS HERE]');
+  const n = buttons[0].startsWith('[') ? 'my own wiring' : buttons.length + ' button' + (buttons.length === 1 ? '' : 's');
+  return { n, buttons,
+           keys: 'arrow keys for any direction buttons, Z = A, X = B, Enter = START (pick sensible keys for any others)',
+           screen: $('cscreen').value.trim() || 'SDA = GPIO6, SCL = GPIO7' };
+}
+
+function render() {
+  const w = wiring();
+  const list = w.buttons.map(b => '  - ' + b).join('\n');
+  const idea = $('idea').value.trim() || '[DESCRIBE YOUR GAME HERE: what the player does, how they score, how they lose.]';
+  $('prompt1').textContent =
+`I'm making a game for the ZakkyBoy, a tiny handheld games console. Build me a playable prototype as ONE self-contained HTML file that I can open in my browser.
+
+THE GAME
+${idea}
+
+THE HARDWARE (the prototype must respect this exactly)
+- Screen: 0.96" SSD1306 OLED, 128 x 64 pixels, 1-bit monochrome. Every pixel is either on (white) or off (black). No colours, no greys, no anti-aliasing.
+- Board: Seeed XIAO ESP32-C3 (160 MHz single core, no floating-point unit, about 400 KB RAM). The game must be simple enough to run at 30 fps on it.
+- Buttons (${w.n}):
+${list}
+- No sound.
+
+HOW TO BUILD THE PROTOTYPE
+- Draw the 128x64 screen on a <canvas> scaled up 6x with crisp pixels (image-rendering: pixelated), centred on a dark page.
+- Do ALL game drawing through a small object called "oled" that copies the U8g2 Arduino library: clearBuffer(), sendBuffer(), drawPixel, drawHLine, drawVLine, drawLine, drawBox, drawFrame, drawCircle, drawDisc, drawRBox, drawRFrame, drawTriangle, setDrawColor(0/1/2), setFont(name) and drawStr(x, y, text) with a small pixel font (5x7 and 3x5), positioned from the text baseline like U8g2. Never draw game graphics with other canvas calls, CSS or HTML elements. This is so the game can be converted to Arduino line by line later.
+- Keyboard controls: ${w.keys}. Also show clickable on-screen buttons under the screen.
+- Use one game loop at a fixed 30 fps: setup() runs once, then loop() every frame, like an Arduino sketch.
+- Keep game state in plain variables, arrays and simple objects (they will become C structs). Prefer whole numbers, and don't create new arrays or objects every frame.
+- Save the high score with localStorage (numbers only).
+- Include a title screen, the game itself, and a game-over screen with the score. A starts and restarts.
+
+Give me the complete HTML file in one code block. After it, suggest three ideas that would make the game more fun on such a tiny screen.`;
+
+  $('prompt2').textContent =
+`Convert the HTML game prototype below into an Arduino sketch (.ino) for the ZakkyBoy handheld.
+
+- Board: Seeed XIAO ESP32-C3 (Arduino core "esp32" by Espressif, board "XIAO_ESP32C3").
+- Screen: SSD1306 128x64 over I2C, address 0x3C, ${w.screen}. Use the U8g2 library with the full-buffer constructor, e.g. U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled(U8G2_R0, U8X8_PIN_NONE); (call Wire.begin with the screen pins first if they aren't the board's defaults).
+- Buttons (${w.n}), each wired from the pin to GND: pinMode INPUT_PULLUP, pressed = LOW. Debounce them.
+${list}
+- Run at 30 fps using millis(), not delay().
+- The oled.* drawing calls in the prototype map one to one onto U8g2. Use U8g2 fonts that match the sizes (u8g2_font_5x7_tr and u8g2_font_4x6_tr or similar).
+- Replace localStorage with the Preferences library.
+- Use whole numbers where possible: the chip has no floating-point unit.
+- Keep the gameplay, timings and look exactly the same as the prototype.
+
+Give me the whole .ino file in one code block, then list any libraries I need to install in the Arduino IDE. If it doesn't compile, I'll paste the error back to you.
+
+Here is the prototype:
+
+[PASTE YOUR WHOLE HTML FILE HERE]`;
+}
+
+document.querySelectorAll('[data-layout]').forEach(chip => chip.addEventListener('click', () => {
+  layout = chip.dataset.layout;
+  document.querySelectorAll('[data-layout]').forEach(c => c.setAttribute('aria-pressed', c === chip));
+  $('custom').hidden = layout !== 'custom';
+  render();
+}));
+['idea', 'cbuttons', 'cscreen'].forEach(id => $(id).addEventListener('input', render));
+
+document.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', async () => {
+  const text = $(btn.dataset.copy).textContent;
+  const note = btn.parentElement.querySelector('.copied');
+  try { await navigator.clipboard.writeText(text); note.textContent = 'Copied. Paste it into your AI chat.'; }
+  catch (_) {
+    const r = document.createRange(); r.selectNodeContents($(btn.dataset.copy));
+    getSelection().removeAllRanges(); getSelection().addRange(r);
+    note.textContent = 'Selected: press Ctrl+C (or Cmd+C) to copy.';
+  }
+  setTimeout(() => { note.textContent = ''; }, 4000);
+}));
+
+render();
+</script>
+</body>
+</html>

@@ -76,9 +76,28 @@
 .pad button small{font:400 10px "JetBrains Mono",ui-monospace,monospace;color:var(--faint)}
 .pad button.on{background:var(--text);color:#000}
 .pad button.on small{color:rgba(0,0,0,.55)}
-.dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,44px);gap:4px;margin-right:12px}
+.dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,44px);gap:4px}
 .dpad button{min-width:0;height:auto;padding:0}
 .dpad [data-pad=up]{grid-area:1/2}.dpad [data-pad=left]{grid-area:2/1}.dpad [data-pad=right]{grid-area:2/3}.dpad [data-pad=down]{grid-area:3/2}
+.pad .extras{display:flex;gap:8px;align-self:flex-end}
+.pad .extras button{height:34px;min-width:52px;font-size:13px}
+.pad .face{display:flex;gap:10px;align-items:center}
+.pad .face button{width:58px;height:58px;min-width:0}
+.pad .face button[data-b=B]{transform:translateY(12px)}
+
+/* Keyboard diagram: the same standard layout for every game, unused keys dimmed */
+.kbd{display:flex;gap:14px;align-items:flex-start;margin:14px 0 0}
+.kbd-title{color:var(--faint);font:12px/1.6 "JetBrains Mono",ui-monospace,monospace;padding-top:6px;min-width:64px}
+.kbd-keys{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.kbd-dpad{display:grid;grid-template-columns:repeat(3,auto);gap:4px}
+.kbd-row{display:flex;gap:4px}
+.cap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 6px;box-sizing:border-box;
+  border:1px solid var(--line-2);border-bottom-width:3px;background:var(--surface-2);line-height:1}
+.cap b{font:600 13px "JetBrains Mono",ui-monospace,monospace;color:var(--text)}
+.cap small{font:400 9px "JetBrains Mono",ui-monospace,monospace;color:var(--muted);margin-top:3px;white-space:nowrap}
+.cap.off{opacity:.3}
+.kbd-std{margin:0 8px 14px;color:var(--faint);font:12px/1.6 "JetBrains Mono",ui-monospace,monospace}
+.kbd-std b{color:var(--muted);font-weight:500}
 .stop{background:none;border:0;color:var(--faint);font:13px "JetBrains Mono",ui-monospace,monospace;cursor:pointer;align-self:center;padding:4px}
 .stop:hover{color:var(--text)}
 .dl{color:var(--faint);font:13px "JetBrains Mono",ui-monospace,monospace;text-decoration:none}
@@ -107,8 +126,9 @@
   </header>
 
   <nav class="filters" aria-label="Filter by number of buttons"><span class="select"><select id="filter" aria-label="Show games for a console with this many buttons"><option value="all">All games</option><option value="7">7-button</option><option value="6">6-button</option><option value="2">2-button</option><option value="1">1-button</option></select><svg viewBox="0 0 10 6" aria-hidden="true"><path fill="currentColor" d="M0 0h10v2H8v2H6v2H4V4H2V2H0z"/></svg></span></nav>
+  <p class="kbd-std">Same keys in every game: <b>WASD</b> D-pad · <b>J</b> A · <b>K</b> B · <b>N M ,</b> extra buttons</p>
   <section class="list">
-      <article class="game" data-buttons="1" data-slug="zakky-pixel" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
+      <article class="game" data-buttons="1" data-slug="zakky-pixel" data-play="[{&quot;button&quot;: &quot;A&quot;, &quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;kb&quot;: &quot;KeyJ&quot;, &quot;kbLabel&quot;: &quot;J&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-pixel">
           <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/zakky-pixel-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/zakky-pixel-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Zakky Pixel</span><span class="row-blurb">The first ZakkyBoy game: a one-button helicopter.</span></span>
@@ -120,7 +140,7 @@
           <div class="info">
             <p class="blurb">The first ZakkyBoy game: a one-button helicopter.</p>
             <p class="pins">1 button · Button: GPIO20</p>
-            <p class="keys">Keyboard: Space = A</p>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap off" style="grid-area:1/2"><b>W</b></span><span class="cap off" style="grid-area:2/1"><b>A</b></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap off" style="grid-area:2/3"><b>D</b></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A</small></span><span class="cap off"><b>K</b></span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/zakky-pixel.json">
@@ -133,7 +153,7 @@
           </div>
         </div></div>
       </article>
-      <article class="game" data-buttons="1" data-slug="zakky-gun" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
+      <article class="game" data-buttons="1" data-slug="zakky-gun" data-play="[{&quot;button&quot;: &quot;A&quot;, &quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;kb&quot;: &quot;KeyJ&quot;, &quot;kbLabel&quot;: &quot;J&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-gun">
           <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/zakky-gun-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/zakky-gun-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Zakky Gun</span><span class="row-blurb">One-button arcade shooter.</span></span>
@@ -145,7 +165,7 @@
           <div class="info">
             <p class="blurb">One-button arcade shooter.</p>
             <p class="pins">1 button · Button: GPIO20</p>
-            <p class="keys">Keyboard: Space = A</p>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap off" style="grid-area:1/2"><b>W</b></span><span class="cap off" style="grid-area:2/1"><b>A</b></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap off" style="grid-area:2/3"><b>D</b></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A</small></span><span class="cap off"><b>K</b></span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/zakky-gun.json">
@@ -183,7 +203,7 @@
           </div>
         </div></div>
       </article>
-      <article class="game" data-buttons="1" data-slug="gravity-tunnel" data-play="[{&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;hint&quot;: &quot;Space&quot;}]">
+      <article class="game" data-buttons="1" data-slug="gravity-tunnel" data-play="[{&quot;button&quot;: &quot;A&quot;, &quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot; &quot;, &quot;code&quot;: &quot;Space&quot;, &quot;kb&quot;: &quot;KeyJ&quot;, &quot;kbLabel&quot;: &quot;J&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-gravity-tunnel">
           <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/gravity-tunnel-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/gravity-tunnel-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Gravity Tunnel</span><span class="row-blurb">One-button tunnel game. Zakky Gun grew out of it.</span></span>
@@ -195,7 +215,7 @@
           <div class="info">
             <p class="blurb">One-button tunnel game. Zakky Gun grew out of it.</p>
             <p class="pins">1 button · Button: GPIO20</p>
-            <p class="keys">Keyboard: Space = A</p>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap off" style="grid-area:1/2"><b>W</b></span><span class="cap off" style="grid-area:2/1"><b>A</b></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap off" style="grid-area:2/3"><b>D</b></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A</small></span><span class="cap off"><b>K</b></span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/gravity-tunnel.json">
@@ -233,7 +253,7 @@
           </div>
         </div></div>
       </article>
-      <article class="game" data-buttons="2" data-slug="zakky-drift" data-play="[{&quot;label&quot;: &quot;B&quot;, &quot;sub&quot;: &quot;left&quot;, &quot;key&quot;: &quot;s&quot;, &quot;code&quot;: &quot;KeyS&quot;, &quot;hint&quot;: &quot;S&quot;}, {&quot;label&quot;: &quot;A&quot;, &quot;sub&quot;: &quot;right&quot;, &quot;key&quot;: &quot;a&quot;, &quot;code&quot;: &quot;KeyA&quot;, &quot;hint&quot;: &quot;A&quot;}]">
+      <article class="game" data-buttons="2" data-slug="zakky-drift" data-play="[{&quot;button&quot;: &quot;B&quot;, &quot;label&quot;: &quot;B&quot;, &quot;sub&quot;: &quot;left&quot;, &quot;key&quot;: &quot;s&quot;, &quot;code&quot;: &quot;KeyS&quot;, &quot;kb&quot;: &quot;KeyK&quot;, &quot;kbLabel&quot;: &quot;K&quot;}, {&quot;button&quot;: &quot;A&quot;, &quot;label&quot;: &quot;A&quot;, &quot;sub&quot;: &quot;right&quot;, &quot;key&quot;: &quot;a&quot;, &quot;code&quot;: &quot;KeyA&quot;, &quot;kb&quot;: &quot;KeyJ&quot;, &quot;kbLabel&quot;: &quot;J&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-zakky-drift">
           <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/zakky-drift-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/zakky-drift-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Zakky Drift</span><span class="row-blurb">Drift racer. One button steers left, the other right.</span></span>
@@ -245,7 +265,7 @@
           <div class="info">
             <p class="blurb">Drift racer. One button steers left, the other right.</p>
             <p class="pins">2 buttons · A (confirm / right): GPIO20 · B (cycle / left): GPIO3</p>
-            <p class="keys">Keyboard: S = B (left) · A = A (right)</p>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap off" style="grid-area:1/2"><b>W</b></span><span class="cap off" style="grid-area:2/1"><b>A</b></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap off" style="grid-area:2/3"><b>D</b></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A right</small></span><span class="cap"><b>K</b><small>B left</small></span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/zakky-drift.json">
@@ -258,7 +278,7 @@
           </div>
         </div></div>
       </article>
-      <article class="game" data-buttons="6" data-slug="tetris" data-play="[{&quot;label&quot;: &quot;◀&quot;, &quot;sub&quot;: &quot;move&quot;, &quot;key&quot;: &quot;ArrowLeft&quot;, &quot;code&quot;: &quot;ArrowLeft&quot;, &quot;hint&quot;: &quot;←&quot;}, {&quot;label&quot;: &quot;▶&quot;, &quot;sub&quot;: &quot;move&quot;, &quot;key&quot;: &quot;ArrowRight&quot;, &quot;code&quot;: &quot;ArrowRight&quot;, &quot;hint&quot;: &quot;→&quot;}, {&quot;label&quot;: &quot;↻&quot;, &quot;sub&quot;: &quot;rotate&quot;, &quot;key&quot;: &quot;ArrowDown&quot;, &quot;code&quot;: &quot;ArrowDown&quot;, &quot;hint&quot;: &quot;↓&quot;}, {&quot;label&quot;: &quot;▼&quot;, &quot;sub&quot;: &quot;drop&quot;, &quot;key&quot;: &quot;ArrowUp&quot;, &quot;code&quot;: &quot;ArrowUp&quot;, &quot;hint&quot;: &quot;↑&quot;}]">
+      <article class="game" data-buttons="6" data-slug="tetris" data-play="[{&quot;button&quot;: &quot;left&quot;, &quot;label&quot;: &quot;◀&quot;, &quot;sub&quot;: &quot;move&quot;, &quot;key&quot;: &quot;ArrowLeft&quot;, &quot;code&quot;: &quot;ArrowLeft&quot;, &quot;kb&quot;: &quot;KeyA&quot;, &quot;kbLabel&quot;: &quot;A&quot;}, {&quot;button&quot;: &quot;right&quot;, &quot;label&quot;: &quot;▶&quot;, &quot;sub&quot;: &quot;move&quot;, &quot;key&quot;: &quot;ArrowRight&quot;, &quot;code&quot;: &quot;ArrowRight&quot;, &quot;kb&quot;: &quot;KeyD&quot;, &quot;kbLabel&quot;: &quot;D&quot;}, {&quot;button&quot;: &quot;A&quot;, &quot;label&quot;: &quot;↻&quot;, &quot;sub&quot;: &quot;rotate&quot;, &quot;key&quot;: &quot;ArrowDown&quot;, &quot;code&quot;: &quot;ArrowDown&quot;, &quot;kb&quot;: &quot;KeyJ&quot;, &quot;kbLabel&quot;: &quot;J&quot;}, {&quot;button&quot;: &quot;up&quot;, &quot;label&quot;: &quot;▲&quot;, &quot;sub&quot;: &quot;drop&quot;, &quot;key&quot;: &quot;ArrowUp&quot;, &quot;code&quot;: &quot;ArrowUp&quot;, &quot;kb&quot;: &quot;KeyW&quot;, &quot;kbLabel&quot;: &quot;W&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-tetris">
           <span class="thumb-wrap"><span class="thumb portrait"><img src="assets/shots/tetris-title.png" alt="" loading="lazy"></span><span class="peek portrait" aria-hidden="true"><img src="assets/shots/tetris-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Blocks</span><span class="row-blurb">Falling blocks, played with the console held upright. Built for an SH1106 screen rather than the usual SSD1306.</span></span>
@@ -270,7 +290,7 @@
           <div class="info">
             <p class="blurb">Falling blocks, played with the console held upright. Built for an SH1106 screen rather than the usual SSD1306.</p>
             <p class="pins">6 buttons · A 21 · B 20 · Up 4 · Down 2 · Left 5 · Right 3 · screen SDA 6, SCL 7</p>
-            <p class="keys">Keyboard: ← move · → move · ↓ rotate · ↑ drop</p>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap" style="grid-area:1/2"><b>W</b><small>▲ drop</small></span><span class="cap" style="grid-area:2/1"><b>A</b><small>◀ move</small></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap" style="grid-area:2/3"><b>D</b><small>▶ move</small></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A rotate</small></span><span class="cap off"><b>K</b></span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/tetris.json">
@@ -283,7 +303,7 @@
           </div>
         </div></div>
       </article>
-      <article class="game" data-buttons="7" data-slug="jakes-quest" data-play="[{&quot;label&quot;: &quot;▲&quot;, &quot;key&quot;: &quot;ArrowUp&quot;, &quot;code&quot;: &quot;ArrowUp&quot;, &quot;hint&quot;: &quot;↑&quot;, &quot;pad&quot;: &quot;up&quot;}, {&quot;label&quot;: &quot;◀&quot;, &quot;key&quot;: &quot;ArrowLeft&quot;, &quot;code&quot;: &quot;ArrowLeft&quot;, &quot;hint&quot;: &quot;←&quot;, &quot;pad&quot;: &quot;left&quot;}, {&quot;label&quot;: &quot;▶&quot;, &quot;key&quot;: &quot;ArrowRight&quot;, &quot;code&quot;: &quot;ArrowRight&quot;, &quot;hint&quot;: &quot;→&quot;, &quot;pad&quot;: &quot;right&quot;}, {&quot;label&quot;: &quot;▼&quot;, &quot;key&quot;: &quot;ArrowDown&quot;, &quot;code&quot;: &quot;ArrowDown&quot;, &quot;hint&quot;: &quot;↓&quot;, &quot;pad&quot;: &quot;down&quot;}, {&quot;label&quot;: &quot;Start&quot;, &quot;key&quot;: &quot;Enter&quot;, &quot;code&quot;: &quot;Enter&quot;, &quot;hint&quot;: &quot;Enter&quot;}, {&quot;label&quot;: &quot;B&quot;, &quot;key&quot;: &quot;x&quot;, &quot;code&quot;: &quot;KeyX&quot;, &quot;hint&quot;: &quot;X&quot;}, {&quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot;z&quot;, &quot;code&quot;: &quot;KeyZ&quot;, &quot;hint&quot;: &quot;Z&quot;}]">
+      <article class="game" data-buttons="7" data-slug="jakes-quest" data-play="[{&quot;button&quot;: &quot;up&quot;, &quot;label&quot;: &quot;▲&quot;, &quot;key&quot;: &quot;ArrowUp&quot;, &quot;code&quot;: &quot;ArrowUp&quot;, &quot;kb&quot;: &quot;KeyW&quot;, &quot;kbLabel&quot;: &quot;W&quot;}, {&quot;button&quot;: &quot;left&quot;, &quot;label&quot;: &quot;◀&quot;, &quot;key&quot;: &quot;ArrowLeft&quot;, &quot;code&quot;: &quot;ArrowLeft&quot;, &quot;kb&quot;: &quot;KeyA&quot;, &quot;kbLabel&quot;: &quot;A&quot;}, {&quot;button&quot;: &quot;right&quot;, &quot;label&quot;: &quot;▶&quot;, &quot;key&quot;: &quot;ArrowRight&quot;, &quot;code&quot;: &quot;ArrowRight&quot;, &quot;kb&quot;: &quot;KeyD&quot;, &quot;kbLabel&quot;: &quot;D&quot;}, {&quot;button&quot;: &quot;down&quot;, &quot;label&quot;: &quot;▼&quot;, &quot;key&quot;: &quot;ArrowDown&quot;, &quot;code&quot;: &quot;ArrowDown&quot;, &quot;kb&quot;: &quot;KeyS&quot;, &quot;kbLabel&quot;: &quot;S&quot;}, {&quot;button&quot;: &quot;extra&quot;, &quot;label&quot;: &quot;Start&quot;, &quot;key&quot;: &quot;Enter&quot;, &quot;code&quot;: &quot;Enter&quot;, &quot;kb&quot;: &quot;KeyN&quot;, &quot;kbLabel&quot;: &quot;N&quot;}, {&quot;button&quot;: &quot;B&quot;, &quot;label&quot;: &quot;B&quot;, &quot;key&quot;: &quot;x&quot;, &quot;code&quot;: &quot;KeyX&quot;, &quot;kb&quot;: &quot;KeyK&quot;, &quot;kbLabel&quot;: &quot;K&quot;}, {&quot;button&quot;: &quot;A&quot;, &quot;label&quot;: &quot;A&quot;, &quot;key&quot;: &quot;z&quot;, &quot;code&quot;: &quot;KeyZ&quot;, &quot;kb&quot;: &quot;KeyJ&quot;, &quot;kbLabel&quot;: &quot;J&quot;}]">
         <button class="row" type="button" aria-expanded="false" aria-controls="d-jakes-quest">
           <span class="thumb-wrap"><span class="thumb"><img src="assets/shots/jakes-quest-title.png" alt="" loading="lazy"></span><span class="peek" aria-hidden="true"><img src="assets/shots/jakes-quest-play.png" alt="" loading="lazy"></span></span>
           <span class="row-text"><span class="name">Jake&#x27;s Quest</span><span class="row-blurb">Roguelike in the spirit of Binding of Isaac: move, shoot and bomb your way through.</span></span>
@@ -295,7 +315,7 @@
           <div class="info">
             <p class="blurb">Roguelike in the spirit of Binding of Isaac: move, shoot and bomb your way through.</p>
             <p class="pins">7 buttons · Up 9 · Down 5 · Left 6 · Right 8 · A 1 · B 0 · Start 2 (finds the screen by itself)</p>
-            <p class="keys">Keyboard: Arrow keys = D-pad · Enter = Start · X = B · Z = A</p>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap" style="grid-area:1/2"><b>W</b><small>▲</small></span><span class="cap" style="grid-area:2/1"><b>A</b><small>◀</small></span><span class="cap" style="grid-area:2/2"><b>S</b><small>▼</small></span><span class="cap" style="grid-area:2/3"><b>D</b><small>▶</small></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A</small></span><span class="cap"><b>K</b><small>B</small></span></div><div class="kbd-row"><span class="cap"><b>N</b><small>Start</small></span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/jakes-quest.json">
@@ -364,22 +384,30 @@ function play(g) {
   screen.appendChild(frame);
   frame.addEventListener('load', () => frame.focus());
 
+  // Laid out like the console: D-pad on the left, extra buttons in the middle, B and A on the right
   const pad = document.createElement('div');
   pad.className = 'pad';
-  const dpad = controls.some(c => c.pad) ? Object.assign(document.createElement('div'), { className: 'dpad' }) : null;
-  if (dpad) pad.appendChild(dpad);
+  const group = cls => Object.assign(document.createElement('div'), { className: cls });
+  const dpad = group('dpad'), extras = group('extras'), face = group('face');
+  const DIRS = ['up', 'down', 'left', 'right'];
   controls.forEach((c, i) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.i = i;
-    if (c.pad) b.dataset.pad = c.pad;
-    b.setAttribute('aria-label', c.sub ? `${c.label} (${c.sub})` : c.label);
-    b.innerHTML = c.label + (c.sub ? `<small>${c.sub}</small>` : '');
+    b.dataset.b = c.button;
+    if (DIRS.includes(c.button)) b.dataset.pad = c.button;
+    const what = c.sub ? `${c.label} (${c.sub})` : c.label;
+    b.setAttribute('aria-label', `${what}, key ${c.kbLabel}`);
+    b.title = `${what}: key ${c.kbLabel}`;
+    b.innerHTML = c.label + `<small>${c.kbLabel}</small>`;
     const up = () => send(c, false);
     b.addEventListener('pointerdown', e => { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (_) {} send(c, true); });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => b.addEventListener(ev, up));
-    (c.pad ? dpad : pad).appendChild(b);
+    (DIRS.includes(c.button) ? dpad : c.button === 'extra' ? extras : face).appendChild(b);
   });
+  // B sits left of A, as on the console
+  [...face.children].sort((x, y) => (x.dataset.b === 'A') - (y.dataset.b === 'A')).forEach(b => face.appendChild(b));
+  [dpad, extras, face].forEach(el => { if (el.children.length) pad.appendChild(el); });
   const stopBtn = Object.assign(document.createElement('button'), { type: 'button', className: 'stop', textContent: 'Stop playing' });
   stopBtn.addEventListener('click', stop);
   g.querySelector('.stage').append(pad, stopBtn);
@@ -389,20 +417,28 @@ function play(g) {
 
 games.forEach(g => g.querySelector('.play')?.addEventListener('click', () => play(g)));
 
-// Keys pressed on the main page (not inside the game) are passed to the game that's playing
+// Keys pressed on the main page (not inside the game) are passed to the game that's playing.
+// Every game uses the standard keys (c.kb); send() turns them into the key that game expects.
 const held = new Set();
 addEventListener('keydown', e => {
   if (!playing) return;
-  const c = playing.controls.find(c => c.code === e.code);
+  const c = playing.controls.find(c => c.kb === e.code);
   if (!c) return;
   e.preventDefault();
   if (!held.has(e.code)) { held.add(e.code); send(c, true); }
 });
 addEventListener('keyup', e => {
   if (!playing) return;
-  const c = playing.controls.find(c => c.code === e.code);
+  const c = playing.controls.find(c => c.kb === e.code);
   if (c) { held.delete(e.code); send(c, false); }
 });
+// Called by the game frame when a key is pressed while the game has focus, to light the on-screen button
+window.zbLight = (code, down) => {
+  if (!playing) return;
+  const i = playing.controls.findIndex(c => c.kb === code);
+  const btn = playing.game.querySelector(`.pad button[data-i="${i}"]`);
+  if (btn) btn.classList.toggle('on', down);
+};
 </script>
 </body>
 </html>

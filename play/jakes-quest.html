@@ -2436,9 +2436,20 @@ body > :not(#zb-stage) { display: none !important; }
   stage.id = 'zb-stage';
   document.body.appendChild(stage);
   stage.appendChild(c);
-  // Stop arrow keys and Space scrolling the page this is embedded in
-  addEventListener('keydown', function (e) {
-    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) >= 0) e.preventDefault();
-  }, { passive: false });
+  // Standard ZakkyBoy keys (WASD = D-pad, J = A, K = B, N M , = extra buttons) -> the keys this
+  // prototype listens for. Real key presses never reach the game directly, only the translated ones,
+  // so every game uses the same layout and old keys (e.g. Drift's A/S) can't clash with the D-pad.
+  // Presses sent by the page's on-screen buttons and the screenshot tool are already translated.
+  var KEYMAP = {"KeyW": {"key": "ArrowUp", "code": "ArrowUp"}, "KeyA": {"key": "ArrowLeft", "code": "ArrowLeft"}, "KeyD": {"key": "ArrowRight", "code": "ArrowRight"}, "KeyS": {"key": "ArrowDown", "code": "ArrowDown"}, "KeyN": {"key": "Enter", "code": "Enter"}, "KeyK": {"key": "x", "code": "KeyX"}, "KeyJ": {"key": "z", "code": "KeyZ"}};
+  function relay(e) {
+    if (!e.isTrusted) return;           // a translated press: let the game have it
+    e.stopImmediatePropagation();
+    e.preventDefault();                 // also stops keys scrolling the page this is embedded in
+    var to = KEYMAP[e.code];
+    if (!to || e.type === 'keypress' || e.repeat) return;
+    document.dispatchEvent(new KeyboardEvent(e.type, { key: to.key, code: to.code, bubbles: true, cancelable: true }));
+    try { parent.zbLight && parent.zbLight(e.code, e.type === 'keydown'); } catch (_) {}
+  }
+  ['keydown', 'keyup', 'keypress'].forEach(function (t) { addEventListener(t, relay, { capture: true, passive: false }); });
 })();
 </script>

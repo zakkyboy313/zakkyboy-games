@@ -85,17 +85,15 @@
 .pad .face button{width:58px;height:58px;min-width:0}
 .pad .face button[data-b=B]{transform:translateY(12px)}
 
-/* Keyboard diagram: the same standard layout for every game, unused keys dimmed */
+/* Keyboard controls: keycaps with what they do beside them in plain words */
 .kbd{display:flex;gap:14px;align-items:flex-start;margin:14px 0 0}
-.kbd-title{color:var(--faint);font:12px/1.6 "JetBrains Mono",ui-monospace,monospace;padding-top:6px;min-width:64px}
-.kbd-keys{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
-.kbd-dpad{display:grid;grid-template-columns:repeat(3,auto);gap:4px}
-.kbd-row{display:flex;gap:4px}
-.cap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 6px;box-sizing:border-box;
-  border:1px solid var(--line-2);border-bottom-width:3px;background:var(--surface-2);line-height:1}
-.cap b{font:600 13px "JetBrains Mono",ui-monospace,monospace;color:var(--text)}
-.cap small{font:400 9px "JetBrains Mono",ui-monospace,monospace;color:var(--muted);margin-top:3px;white-space:nowrap}
-.cap.off{opacity:.3}
+.kbd-title{color:var(--faint);font:12px/1.6 "JetBrains Mono",ui-monospace,monospace;padding-top:5px;min-width:64px}
+.kbd-list{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center}
+.kbd-item{display:contents}
+.kbd-caps{display:flex;gap:4px}
+.cap{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;
+  border:1px solid var(--line-2);border-bottom-width:3px;background:var(--surface-2);color:var(--text);font:600 13px "JetBrains Mono",ui-monospace,monospace}
+.kbd-does{color:var(--muted);font-size:14px}
 .kbd-std{margin:0 8px 14px;color:var(--faint);font:12px/1.6 "JetBrains Mono",ui-monospace,monospace}
 .kbd-std b{color:var(--muted);font-weight:500}
 .stop{background:none;border:0;color:var(--faint);font:13px "JetBrains Mono",ui-monospace,monospace;cursor:pointer;align-self:center;padding:4px}
@@ -140,7 +138,7 @@
           <div class="info">
             <p class="blurb">The first ZakkyBoy game: a one-button helicopter.</p>
             <p class="pins">1 button · Button: GPIO20</p>
-            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap off" style="grid-area:1/2"><b>W</b></span><span class="cap off" style="grid-area:2/1"><b>A</b></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap off" style="grid-area:2/3"><b>D</b></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A</small></span><span class="cap off"><b>K</b></span></div></div></div>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-list"><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">J</kbd></span><span class="kbd-does">A button</span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/zakky-pixel.json">
@@ -165,7 +163,7 @@
           <div class="info">
             <p class="blurb">One-button arcade shooter.</p>
             <p class="pins">1 button · Button: GPIO20</p>
-            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap off" style="grid-area:1/2"><b>W</b></span><span class="cap off" style="grid-area:2/1"><b>A</b></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap off" style="grid-area:2/3"><b>D</b></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A</small></span><span class="cap off"><b>K</b></span></div></div></div>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-list"><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">J</kbd></span><span class="kbd-does">A button</span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/zakky-gun.json">
@@ -215,7 +213,7 @@
           <div class="info">
             <p class="blurb">One-button tunnel game. Zakky Gun grew out of it.</p>
             <p class="pins">1 button · Button: GPIO20</p>
-            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap off" style="grid-area:1/2"><b>W</b></span><span class="cap off" style="grid-area:2/1"><b>A</b></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap off" style="grid-area:2/3"><b>D</b></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A</small></span><span class="cap off"><b>K</b></span></div></div></div>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-list"><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">J</kbd></span><span class="kbd-does">A button</span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/gravity-tunnel.json">
@@ -265,7 +263,7 @@
           <div class="info">
             <p class="blurb">Drift racer. One button steers left, the other right.</p>
             <p class="pins">2 buttons · A (confirm / right): GPIO20 · B (cycle / left): GPIO3</p>
-            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap off" style="grid-area:1/2"><b>W</b></span><span class="cap off" style="grid-area:2/1"><b>A</b></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap off" style="grid-area:2/3"><b>D</b></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A right</small></span><span class="cap"><b>K</b><small>B left</small></span></div></div></div>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-list"><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">J</kbd></span><span class="kbd-does">A button · right</span></div><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">K</kbd></span><span class="kbd-does">B button · left</span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/zakky-drift.json">
@@ -290,7 +288,7 @@
           <div class="info">
             <p class="blurb">Falling blocks, played with the console held upright. Built for an SH1106 screen rather than the usual SSD1306.</p>
             <p class="pins">6 buttons · A 21 · B 20 · Up 4 · Down 2 · Left 5 · Right 3 · screen SDA 6, SCL 7</p>
-            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap" style="grid-area:1/2"><b>W</b><small>▲ drop</small></span><span class="cap" style="grid-area:2/1"><b>A</b><small>◀ move</small></span><span class="cap off" style="grid-area:2/2"><b>S</b></span><span class="cap" style="grid-area:2/3"><b>D</b><small>▶ move</small></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A rotate</small></span><span class="cap off"><b>K</b></span></div></div></div>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-list"><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">A</kbd><kbd class="cap">D</kbd></span><span class="kbd-does">move left / right</span></div><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">W</kbd></span><span class="kbd-does">drop</span></div><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">J</kbd></span><span class="kbd-does">A button · rotate</span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/tetris.json">
@@ -315,7 +313,7 @@
           <div class="info">
             <p class="blurb">Roguelike in the spirit of Binding of Isaac: move, shoot and bomb your way through.</p>
             <p class="pins">7 buttons · Up 9 · Down 5 · Left 6 · Right 8 · A 1 · B 0 · Start 2 (finds the screen by itself)</p>
-            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-keys"><div class="kbd-dpad"><span class="cap" style="grid-area:1/2"><b>W</b><small>▲</small></span><span class="cap" style="grid-area:2/1"><b>A</b><small>◀</small></span><span class="cap" style="grid-area:2/2"><b>S</b><small>▼</small></span><span class="cap" style="grid-area:2/3"><b>D</b><small>▶</small></span></div><div class="kbd-row"><span class="cap"><b>J</b><small>A</small></span><span class="cap"><b>K</b><small>B</small></span></div><div class="kbd-row"><span class="cap"><b>N</b><small>Start</small></span></div></div></div>
+            <div class="kbd" aria-label="Keyboard controls"><span class="kbd-title">Keyboard</span><div class="kbd-list"><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">W</kbd><kbd class="cap">A</kbd><kbd class="cap">S</kbd><kbd class="cap">D</kbd></span><span class="kbd-does">D-pad</span></div><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">J</kbd></span><span class="kbd-does">A button</span></div><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">K</kbd></span><span class="kbd-does">B button</span></div><div class="kbd-item"><span class="kbd-caps"><kbd class="cap">N</kbd></span><span class="kbd-does">Start</span></div></div></div>
             <div class="actions">
               <button class="play" type="button">Play in browser</button>
               <esp-web-install-button manifest="firmware/jakes-quest.json">
